@@ -1,5 +1,5 @@
 import numpy
 
-a=10
+a=111120
 
 print(a)
