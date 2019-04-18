@@ -37,8 +37,6 @@ def generate_2D_network(x, y, start_id_vertices, start_id_edges):
 
     for line in range(horizontal_lines):
 
-        print('line: ', line)
-
         vertices_in_current_line = list(range(start_id, start_id + vertices_per_line))
 
         for i in range(len(vertices_in_current_line)):
@@ -115,9 +113,3 @@ def generate_2D_network(x, y, start_id_vertices, start_id_edges):
 x = generate_2D_network(x_dimens, y_dimens, 0, 0)
 
 
-for i in range(x.vcount()):
-
-    print(x.vs[i])
-
-
-print(list(range(x.vcount())))

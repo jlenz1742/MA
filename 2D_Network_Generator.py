@@ -40,8 +40,6 @@ end_vertices = list(range(total_vertices - vertices_per_line, total_vertices))
 
 for line in range(horizontal_lines):
 
-    print('line: ', line)
-
     vertices_in_current_line = list(range(start_id, start_id + vertices_per_line))
 
     for i in range(len(vertices_in_current_line)):
