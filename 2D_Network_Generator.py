@@ -6,10 +6,9 @@ import math
 l_honeycomb = 1                           # Side length of a hexagon
 l_gap = 1                                 # Distance between two layers
 diameter = 1                              # Diameter of edges
-x = 5                                     # Must be odd
-y = 4                                     # Can be either odd or even
+x = 3                                     # Must be odd
+y = 3                                     # Can be either odd or even
 z = 3
-
 
 """ Graph """
 
@@ -112,7 +111,8 @@ for line in range(horizontal_lines):
 
     start_id += vertices_per_line
 
-print(graph.vs[16])
-
-# layout = graph.layout("kk")
-# ig.plot(graph, layout = layout)
+#graph.add_vertices(28)
+#print(graph.vs[16])
+#print(ig.summary(graph))
+#layout = graph.layout("kk")
+#ig.plot(graph, layout = layout)
