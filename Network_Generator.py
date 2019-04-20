@@ -1,12 +1,13 @@
 import igraph as ig
 import math
+from Plot import plot_graph
 
 
 graph_main = ig.Graph()
-x_dimension = 3
+x_dimension = 5
 y_dimension = 3
 z_dimension = 5
-lenght_honeycomb = 1
+lenght_honeycomb = 3
 
 graph_main.vs['x_coordinate'] = float()
 graph_main.vs['y_coordinate'] = float()
@@ -31,7 +32,11 @@ def create_graph(graph, x, y, z, l_honeycomb):
 
     for line in range(horizontal_lines):
 
+        print('line: ', line)
+
         vertices_in_current_line = list(range(start_id, start_id + vertices_per_line))
+
+        print('vertices in line: ', vertices_in_current_line)
 
         for i in range(len(vertices_in_current_line)):
 
@@ -41,11 +46,13 @@ def create_graph(graph, x, y, z, l_honeycomb):
 
             if (line % 2) == 0:
 
-                graph.vs[vertices_in_current_line[i]]['y_coordinate'] = math.sin(60 * 2 * math.pi / 360) * l_honeycomb * line # Set y-coordinate of each vertex
+                graph.vs[vertices_in_current_line[i]]['y_coordinate'] = math.sin(60 * 2 * math.pi / 360) * l_honeycomb * line / 2 # Set y-coordinate of each vertex
 
             else:
 
-                graph.vs[vertices_in_current_line[i]]['y_coordinate'] = math.sin(60 * 2 * math.pi / 360) * l_honeycomb * (line-1) + math.cos(30 * 2 * math.pi / 360) * l_honeycomb * 0.5
+                graph.vs[vertices_in_current_line[i]]['y_coordinate'] = math.cos(30 * 2 * math.pi / 360) * l_honeycomb / 2 + (line-1) * math.cos(30 * 2 * math.pi / 360) * l_honeycomb /2
+
+                print(math.cos(30 * 2 * math.pi / 360) * l_honeycomb / 2 + (line-1) * math.cos(30 * 2 * math.pi / 360) * l_honeycomb)
 
             if (line % 4) == 0:
 
@@ -175,6 +182,6 @@ def create_graph(graph, x, y, z, l_honeycomb):
 
             graph.add_edge(nodes_slanting_to_the_right[j], nodes_slanting_to_the_right_upper_level[j])
 
-    return graph
 
+    return graph
 
