@@ -109,8 +109,3 @@ for line in range(horizontal_lines):
 
     start_id += vertices_per_line
 
-#graph.add_vertices(28)
-#print(graph.vs[16])
-#print(ig.summary(graph))
-#layout = graph.layout("kk")
-#ig.plot(graph, layout = layout)
