@@ -1,49 +1,46 @@
 import igraph as ig
+import math
 
 
-graph = ig.Graph()
+graph_main = ig.Graph()
+x = 3
+y = 3
+z = 2
 
-graph.add_vertices(4)
+graph_main.vs['x_coordinate'] = float()
+graph_main.vs['y_coordinate'] = float()
+graph_main.vs['z_coordinate'] = float()
+graph_main.vs['vortex_id'] = int()
 
-graph.vs[0]['x_coordinate'] = 0
-graph.vs[0]['y_coordinate'] = 0
-graph.vs[0]['z_coordinate'] = 1
+# Edge Attributes
 
-graph.add_edge(0, 1, original_id=0)
-graph.add_edge(1, 2, original_id=1)
-graph.add_edge(2, 3, original_id=2)
-graph.add_edge(3, 0, original_id=3)
+graph_main.es['edge_id'] = int()
 
-graph.vs["original_id"] = list(range(graph.vcount()))
+def create_graph(graph):
 
+    ''' Add Vertices '''
 
-def split_edge(edge_id):
+    horizontal_lines = 4 * y + 1
 
-    print('Current edge id: ', edge_id)
+    print('number of horinzontal lines: ', horizontal_lines)
 
-    source_vertex = graph.es['original_id' == edge_id].source
-    target_vertex = graph.es['original_id' == edge_id].target
+    vertices_per_line = x + 1
 
-    print(source_vertex, target_vertex)
+    print('number of vertices per line: ', vertices_per_line)
 
-    graph.delete_edges('original_id' == edge_id)
+    total_vertices = horizontal_lines * vertices_per_line
 
-    graph.add_vertices(1)
-    id_new_vertex = graph.vcount() - 1
+    print('total vertices per Line: ', total_vertices)
 
-    graph.add_edge(source_vertex, id_new_vertex, original_id=graph.ecount()-1)
-    graph.add_edge(id_new_vertex, target_vertex, original_id=graph.ecount()-1)
+    graph.add_vertices(total_vertices)
 
-    return
+    ''' Add Edges '''
 
-print(graph.ecount())
+    start_id = 0
+    end_vertices = list(range(total_vertices - vertices_per_line, total_vertices))
 
-for edge in range(graph.ecount()):
-
-    split_edge(edge)
+    for line in range(horizontal_lines):
 
 
 
-for edge in range(graph.ecount()):
-
-    print(graph.es[edge])
+                return graph
