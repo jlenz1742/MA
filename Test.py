@@ -4,9 +4,9 @@ from Plot import plot_graph
 
 
 graph_main = ig.Graph()
-x_dimension = 7
-y_dimension = 7
-z_dimension = 11
+x_dimension = 3
+y_dimension = 3
+z_dimension = 3
 lenght_honeycomb = 3
 
 graph_main.vs['x_coordinate'] = float()
@@ -32,11 +32,7 @@ def create_graph(graph, x, y, z, l_honeycomb):
 
     for line in range(horizontal_lines):
 
-        print('line: ', line)
-
         vertices_in_current_line = list(range(start_id, start_id + vertices_per_line))
-
-        print('vertices in line: ', vertices_in_current_line)
 
         for i in range(len(vertices_in_current_line)):
 
@@ -51,8 +47,6 @@ def create_graph(graph, x, y, z, l_honeycomb):
             else:
 
                 graph.vs[vertices_in_current_line[i]]['y_coordinate'] = math.cos(30 * 2 * math.pi / 360) * l_honeycomb / 2 + (line-1) * math.cos(30 * 2 * math.pi / 360) * l_honeycomb /2
-
-                print(math.cos(30 * 2 * math.pi / 360) * l_honeycomb / 2 + (line-1) * math.cos(30 * 2 * math.pi / 360) * l_honeycomb)
 
             if (line % 4) == 0:
 
@@ -185,8 +179,14 @@ def create_graph(graph, x, y, z, l_honeycomb):
 
     return graph
 
+
+
 for level in range(z_dimension):
 
     graph_main = create_graph(graph_main, x_dimension, y_dimension, level, lenght_honeycomb)
 
 plot_graph(graph_main)
+
+# for i in range(graph_main.vcount()):
+
+#   print(graph_main.vs[i])
