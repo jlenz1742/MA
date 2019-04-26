@@ -1,24 +1,16 @@
-import igraph as ig
 import math
-from Plot import plot_graph
 
 
-graph_main = ig.Graph()
-x_dimension = 5
-y_dimension = 3
-z_dimension = 5
-lenght_honeycomb = 3
+def create_3d_graph(graph, x, y, z, l_honeycomb):
 
-graph_main.vs['x_coordinate'] = float()
-graph_main.vs['y_coordinate'] = float()
-graph_main.vs['z_coordinate'] = float()
-graph_main.vs['vortex_id'] = int()
+    for level in range(z):
 
-# Edge Attributes
+        graph = create_plane(graph, x, y, level, l_honeycomb)
 
-graph_main.es['edge_id'] = int()
+    return graph
 
-def create_graph(graph, x, y, z, l_honeycomb):
+
+def create_plane(graph, x, y, z, l_honeycomb):
 
     horizontal_lines = 4 * y + 1
     vertices_per_line = x + 1
@@ -32,11 +24,7 @@ def create_graph(graph, x, y, z, l_honeycomb):
 
     for line in range(horizontal_lines):
 
-        print('line: ', line)
-
         vertices_in_current_line = list(range(start_id, start_id + vertices_per_line))
-
-        print('vertices in line: ', vertices_in_current_line)
 
         for i in range(len(vertices_in_current_line)):
 
@@ -51,8 +39,6 @@ def create_graph(graph, x, y, z, l_honeycomb):
             else:
 
                 graph.vs[vertices_in_current_line[i]]['y_coordinate'] = math.cos(30 * 2 * math.pi / 360) * l_honeycomb / 2 + (line-1) * math.cos(30 * 2 * math.pi / 360) * l_honeycomb /2
-
-                print(math.cos(30 * 2 * math.pi / 360) * l_honeycomb / 2 + (line-1) * math.cos(30 * 2 * math.pi / 360) * l_honeycomb)
 
             if (line % 4) == 0:
 
@@ -90,15 +76,16 @@ def create_graph(graph, x, y, z, l_honeycomb):
             if vertices_in_current_line[i] in end_vertices:
 
                 if (vertices_in_current_line[i] % 2) == 0:
+
                     graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + 1)
 
             elif (line % 2) != 0:
 
-                graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + x + 1)       # Verbindung gegen oben
+                graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + x + 1)
 
             else:
 
-                graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + x + 1)       # Verbindung gegen oben
+                graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + x + 1)
 
                 if (line % 4) == 0:
 
@@ -182,6 +169,4 @@ def create_graph(graph, x, y, z, l_honeycomb):
 
             graph.add_edge(nodes_slanting_to_the_right[j], nodes_slanting_to_the_right_upper_level[j])
 
-
     return graph
-
