@@ -6,6 +6,7 @@ import random
 import Network_Generator
 import Tracer_Tracking_Algorithm
 import Plot
+import math
 
 ''' Input '''
 
@@ -38,7 +39,7 @@ graph_main = Network_Generator.create_3d_graph(graph_main, x_dimension, y_dimens
 
 ''' Plot '''
 
-# Plot.plot_graph(graph_main)
+Plot.plot_graph(graph_main)
 
 ''' Tracer Path '''
 

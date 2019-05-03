@@ -25,6 +25,8 @@ def create_plane(graph, x, y, z, l_honeycomb):
     for line in range(horizontal_lines):
 
         vertices_in_current_line = list(range(start_id, start_id + vertices_per_line))
+        print('Current Line: ', line)
+        print(vertices_in_current_line)
 
         for i in range(len(vertices_in_current_line)):
 
@@ -56,16 +58,17 @@ def create_plane(graph, x, y, z, l_honeycomb):
 
                    graph.vs[vertices_in_current_line[i]]['x_coordinate'] = 1.5 * l_honeycomb * i - 0.25 * l_honeycomb
 
+
                 else:
 
                    graph.vs[vertices_in_current_line[i]]['x_coordinate'] = l_honeycomb * (1.5 * i - 0.5) + 0.25 * l_honeycomb
-
 
             else:
 
                 if (vertices_in_current_line[i] % 2) == 0:
 
                     graph.vs[vertices_in_current_line[i]]['x_coordinate'] = 1.5 * l_honeycomb * i - 0.5 * l_honeycomb
+
 
                 else:
 
