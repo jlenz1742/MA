@@ -3,6 +3,7 @@ import pickle
 import igraph
 import math
 
+
 def get_penetrating_tree_from_pkl_file(file_path, file_id):
 
     ''' Function reads pkl file and creates graph with the most important attributes. '''
@@ -18,9 +19,6 @@ def get_penetrating_tree_from_pkl_file(file_path, file_id):
     with open(path_ + file_name_vertices, 'rb') as f:
 
         data_vertex = pickle.load(f, encoding='latin1')
-
-    print([i for i in data_edge])
-    print([i for i in data_vertex])
 
     adjlist = np.array(data_edge['tuple'])
     g = igraph.Graph(adjlist.tolist())
@@ -74,8 +72,21 @@ def get_penetrating_tree_from_pkl_file(file_path, file_id):
     return g
 
 
-path = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\Masterarbeit\database_penetrating_trees\arteryDB'
-file_id = 0
+def coordinates_limits(_graph):
 
-graph_ = get_penetrating_tree_from_pkl_file(path, file_id)
+    ''' Function takes a igraph graph and returns max and min coordinates '''
+
+    # Requirements: Graph need x_coordinate, y_coordinate, z_coordinate as attributes (Vertex attribute)
+
+    coordinate_limits = {}
+
+    coordinate_limits['x_min'] = min(_graph.vs['x_coordinate'])
+    coordinate_limits['x_max'] = max(_graph.vs['x_coordinate'])
+    coordinate_limits['y_min'] = min(_graph.vs['y_coordinate'])
+    coordinate_limits['y_max'] = max(_graph.vs['y_coordinate'])
+    coordinate_limits['z_min'] = min(_graph.vs['z_coordinate'])
+    coordinate_limits['z_max'] = max(_graph.vs['z_coordinate'])
+
+    return coordinate_limits
+
 
