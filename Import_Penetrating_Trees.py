@@ -3,7 +3,6 @@ import pickle
 import igraph
 import math
 
-
 def get_penetrating_tree_from_pkl_file(file_path, file_id):
 
     ''' Function reads pkl file and creates graph with the most important attributes. '''
