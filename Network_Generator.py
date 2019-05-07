@@ -259,20 +259,24 @@ def create_plane_test(graph, x, y, z, l_honeycomb, coord_lim):
                 if (vertices_in_current_line[i] % 2) == 0:
 
                     graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + 1)
+                    graph.es[graph.ecount()-1]['CanBeConnectedToCB'] = 1
 
             elif (line % 2) != 0:
 
                 graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + x + 1)
+                graph.es[graph.ecount() - 1]['CanBeConnectedToCB'] = 0
 
             else:
 
                 graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + x + 1)
+                graph.es[graph.ecount() - 1]['CanBeConnectedToCB'] = 0
 
                 if (line % 4) == 0:
 
                     if (vertices_in_current_line[i] % 2) == 0:
 
                         graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + 1)
+                        graph.es[graph.ecount() - 1]['CanBeConnectedToCB'] = 1
 
                     else:
 
@@ -289,6 +293,7 @@ def create_plane_test(graph, x, y, z, l_honeycomb, coord_lim):
                         else:
 
                             graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + 1)
+                            graph.es[graph.ecount() - 1]['CanBeConnectedToCB'] = 1
 
                     else:
 
@@ -324,6 +329,7 @@ def create_plane_test(graph, x, y, z, l_honeycomb, coord_lim):
         for j in range(len(nodes_slanting_to_the_left)):
 
             graph.add_edge(nodes_slanting_to_the_left[j], nodes_slanting_to_left_upper_level[j])
+            graph.es[graph.ecount() - 1]['CanBeConnectedToCB'] = 0
 
     else:
 
@@ -349,5 +355,22 @@ def create_plane_test(graph, x, y, z, l_honeycomb, coord_lim):
         for j in range(len(nodes_slanting_to_the_right)):
 
             graph.add_edge(nodes_slanting_to_the_right[j], nodes_slanting_to_the_right_upper_level[j])
+            graph.es[graph.ecount() - 1]['CanBeConnectedToCB'] = 0
+
+    for edge in range(graph.ecount()):
+
+        if graph.es[edge]['CanBeConnectedToCB'] == 1:
+
+            x_source = graph.vs[graph.es[edge].source]['x_coordinate']
+            x_target = graph.vs[graph.es[edge].target]['x_coordinate']
+
+            x_mp = (x_target - x_source) * 0.5 + x_source
+            y_mp = graph.vs[graph.es[edge].source]['y_coordinate']
+            z_mp = graph.vs[graph.es[edge].source]['z_coordinate']
+
+            graph.es[edge]['Coord_midpoint'] = (x_mp, y_mp, z_mp)
+
+    graph.es['PartOfCapBed'] = 1
+    graph.vs['PartOfCapBed'] = 1
 
     return graph

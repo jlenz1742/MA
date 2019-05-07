@@ -27,7 +27,12 @@ def plot_graph(graph):
         z.append(graph.vs[graph.es[edge].source]['z_coordinate'])
         z.append(graph.vs[graph.es[edge].target]['z_coordinate'])
 
-        ax.plot(x, y, z, color='red')
+        if graph.es[edge]['connection_CB_Pene'] == 1:
+
+            ax.plot(x, y, z, color='blue')
+        else:
+
+            ax.plot(x, y, z, color='red')
 
     plt.show()
 

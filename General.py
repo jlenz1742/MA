@@ -16,7 +16,7 @@ x_dimension = 3
 y_dimension = 3
 z_dimension = 3
 
-length_honeycomb = 1
+length_honeycomb = 75
 initial_diameter = 1.0
 
 # Specify inlet and outlet pores
@@ -52,6 +52,7 @@ file = 0
 
 graph_ = Import_Penetrating_Trees.get_penetrating_tree_from_pkl_file(path, file)
 
+print('Number of Nodes Penetrating Tree: ', graph_.vcount())
 
 
 # Tüftle
@@ -87,5 +88,52 @@ print(ig.summary(graph_test))
 print(max(graph_test.vs['x_coordinate']))
 print(max(graph_test.vs['y_coordinate']))
 print(max(graph_test.vs['z_coordinate']))
-print('fini')
 
+print(coord_lim)
+
+x_test = 450
+y_test = 1450
+z_test = 75
+
+# for i in range(graph_test.vcount()):
+#
+#     print(graph_test.vs[i])
+
+# for i in range(graph_test.ecount()):
+#
+#     print(graph_test.es[i])
+
+list_distances = []
+list_edges = []
+
+for edge in range(graph_test.ecount()):
+
+    if graph_test.es[edge]['CanBeConnectedToCB'] == 1:
+
+        x_mp = graph_test.es[edge]['Coord_midpoint'][0]
+        y_mp = graph_test.es[edge]['Coord_midpoint'][1]
+        z_mp = graph_test.es[edge]['Coord_midpoint'][2]
+
+        distance = math.sqrt(math.pow(x_test - x_mp, 2) + math.pow(y_test - y_mp, 2) + math.pow(z_test - z_mp, 2))
+
+        list_distances.append(distance)
+        list_edges.append(edge)
+
+    else:
+
+        continue
+
+print(list_distances)
+print(list_edges)
+
+print('Min Distance: ', min(list_distances), ' Edge: ', list_edges[list_distances.index(min(list_distances))])
+
+print(graph_test.es[list_edges[list_distances.index(min(list_distances))]])
+
+graph_test.add_vertex(x_coordinate=x_test, y_coordinate=y_test, z_coordinate=z_test, PartOfCapBed=0, PartOfPenetratingTree=1)
+
+graph_test.add_edge(graph_test.es[list_edges[list_distances.index(min(list_distances))]].source, 858, connection_CB_Pene=1)
+graph_test.add_edge(graph_test.es[list_edges[list_distances.index(min(list_distances))]].target, 858, connection_CB_Pene=1)
+
+graph_test.delete_edges(list_edges[list_distances.index(min(list_distances))])
+# Plot.plot_graph(graph_test)
