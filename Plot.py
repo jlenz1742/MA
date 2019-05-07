@@ -30,6 +30,11 @@ def plot_graph(graph):
         if graph.es[edge]['connection_CB_Pene'] == 1:
 
             ax.plot(x, y, z, color='blue')
+
+        elif graph.es[edge]['PartOfPenetratingTree'] == 1:
+
+            ax.plot(x, y, z, color='green')
+
         else:
 
             ax.plot(x, y, z, color='red')

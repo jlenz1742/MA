@@ -16,7 +16,7 @@ x_dimension = 3
 y_dimension = 3
 z_dimension = 3
 
-length_honeycomb = 75
+length_honeycomb = 35
 initial_diameter = 1.0
 
 # Specify inlet and outlet pores
@@ -51,9 +51,6 @@ path = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\Masterarbeit\database_penetr
 file = 0
 
 graph_ = Import_Penetrating_Trees.get_penetrating_tree_from_pkl_file(path, file)
-
-print('Number of Nodes Penetrating Tree: ', graph_.vcount())
-
 
 # Tüftle
 
@@ -91,49 +88,124 @@ print(max(graph_test.vs['z_coordinate']))
 
 print(coord_lim)
 
-x_test = 450
-y_test = 1450
-z_test = 75
+# x_test = 635.2
+# y_test = 1546.86
+# z_test = 25.63
 
-# for i in range(graph_test.vcount()):
+
+# list_distances = []
+# list_edges = []
 #
-#     print(graph_test.vs[i])
-
-# for i in range(graph_test.ecount()):
+# for edge in range(graph_test.ecount()):
 #
-#     print(graph_test.es[i])
+#     if graph_test.es[edge]['CanBeConnectedToCB'] == 1:
+#
+#         x_mp = graph_test.es[edge]['Coord_midpoint'][0]
+#         y_mp = graph_test.es[edge]['Coord_midpoint'][1]
+#         z_mp = graph_test.es[edge]['Coord_midpoint'][2]
+#
+#         distance = math.sqrt(math.pow(x_test - x_mp, 2) + math.pow(y_test - y_mp, 2) + math.pow(z_test - z_mp, 2))
+#
+#         list_distances.append(distance)
+#         list_edges.append(edge)
+#
+#     else:
+#
+#         continue
+#
+# print(list_distances)
+# print(list_edges)
+#
+# print('Min Distance: ', min(list_distances), ' Edge: ', list_edges[list_distances.index(min(list_distances))])
+#
+# print(graph_test.es[list_edges[list_distances.index(min(list_distances))]])
+#
+# graph_test.add_vertex(x_coordinate=x_test, y_coordinate=y_test, z_coordinate=z_test, PartOfCapBed=0,
+#                       PartOfPenetratingTree=1)
+#
+# graph_test.add_edge(graph_test.es[list_edges[list_distances.index(min(list_distances))]].source, 858,
+#                     connection_CB_Pene=1)
+# graph_test.add_edge(graph_test.es[list_edges[list_distances.index(min(list_distances))]].target, 858,
+#                     connection_CB_Pene=1)
+#
+# graph_test.delete_edges(list_edges[list_distances.index(min(list_distances))])
 
-list_distances = []
-list_edges = []
 
-for edge in range(graph_test.ecount()):
+print('Number of Nodes Penetrating Tree: ', graph_.vcount())
+print('Number of Nodes Capillary Bed: ', graph_test.vcount())
+print('Neighborhood_old Penetrating Tree: ', graph_.neighborhood())
+neighborhood_old = graph_.neighborhood()
+neighborhood_new = []
+for i in neighborhood_old:
+    neighborhood_new.append([x + graph_test.vcount()-1 for x in i])
 
-    if graph_test.es[edge]['CanBeConnectedToCB'] == 1:
+print('Neighborhood_new_Penetrating_Tree: ', neighborhood_new)
 
-        x_mp = graph_test.es[edge]['Coord_midpoint'][0]
-        y_mp = graph_test.es[edge]['Coord_midpoint'][1]
-        z_mp = graph_test.es[edge]['Coord_midpoint'][2]
+nodes_before_penetrating_tree = graph_test.vcount()
 
-        distance = math.sqrt(math.pow(x_test - x_mp, 2) + math.pow(y_test - y_mp, 2) + math.pow(z_test - z_mp, 2))
 
-        list_distances.append(distance)
-        list_edges.append(edge)
+graph_test.add_vertices(graph_.vcount())
+
+for vertex in range(graph_.vcount()):
+
+    vertex_new = vertex + nodes_before_penetrating_tree
+
+    graph_test.vs[vertex_new]['x_coordinate'] = graph_.vs[vertex]['x_coordinate']
+    graph_test.vs[vertex_new]['y_coordinate'] = graph_.vs[vertex]['y_coordinate']
+    graph_test.vs[vertex_new]['z_coordinate'] = graph_.vs[vertex]['z_coordinate']
+    graph_test.vs[vertex_new]['attachmentVertex'] = graph_.vs[vertex]['attachmentVertex']
+    graph_test.vs[vertex_new]['CapBedConnection'] = graph_.vs[vertex]['CapBedConnection']
+
+    graph_test.vs[vertex_new]['PartOfPenetratingTree'] = 1
+
+    neighbors = graph_.neighbors(vertex)
+    neighbors_new = [x + nodes_before_penetrating_tree for x in neighbors]
+
+    for neighbor in neighbors_new:
+
+        if neighbor > vertex_new:
+
+            graph_test.add_edge(vertex_new, neighbor, edge_length=0, diameter=0, PartOfPenetratingTree=1)
+
+    if graph_.vs[vertex]['CapBedConnection'] == 1:
+
+        list_distances = []
+        list_edges = []
+
+        for edge in range(graph_test.ecount()):
+
+            if graph_test.es[edge]['CanBeConnectedToCB'] == 1:
+
+                x_vertex = graph_test.vs[vertex_new]['x_coordinate']
+                y_vertex = graph_test.vs[vertex_new]['y_coordinate']
+                z_vertex = graph_test.vs[vertex_new]['z_coordinate']
+
+                x_mp = graph_test.es[edge]['Coord_midpoint'][0]
+                y_mp = graph_test.es[edge]['Coord_midpoint'][1]
+                z_mp = graph_test.es[edge]['Coord_midpoint'][2]
+
+                distance = math.sqrt(
+                    math.pow(x_vertex - x_mp, 2) + math.pow(y_vertex - y_mp, 2) + math.pow(z_vertex - z_mp, 2))
+
+                list_distances.append(distance)
+                list_edges.append(edge)
+
+            else:
+
+                continue
+
+
+        graph_test.add_edge(graph_test.es[list_edges[list_distances.index(min(list_distances))]].source, vertex_new,
+                            connection_CB_Pene=1)
+        graph_test.add_edge(graph_test.es[list_edges[list_distances.index(min(list_distances))]].target, vertex_new,
+                            connection_CB_Pene=1)
+
+        graph_test.delete_edges(list_edges[list_distances.index(min(list_distances))])
 
     else:
 
         continue
 
-print(list_distances)
-print(list_edges)
 
-print('Min Distance: ', min(list_distances), ' Edge: ', list_edges[list_distances.index(min(list_distances))])
+Plot.plot_graph(graph_test)
 
-print(graph_test.es[list_edges[list_distances.index(min(list_distances))]])
-
-graph_test.add_vertex(x_coordinate=x_test, y_coordinate=y_test, z_coordinate=z_test, PartOfCapBed=0, PartOfPenetratingTree=1)
-
-graph_test.add_edge(graph_test.es[list_edges[list_distances.index(min(list_distances))]].source, 858, connection_CB_Pene=1)
-graph_test.add_edge(graph_test.es[list_edges[list_distances.index(min(list_distances))]].target, 858, connection_CB_Pene=1)
-
-graph_test.delete_edges(list_edges[list_distances.index(min(list_distances))])
-# Plot.plot_graph(graph_test)
