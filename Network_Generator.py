@@ -89,24 +89,24 @@ def create_plane(graph, x, y, z, l_honeycomb, coord_lim):
                 if (vertices_in_current_line[i] % 2) == 0:
 
                     graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + 1)
-                    graph.es[graph.ecount()-1]['CanBeConnectedToCB'] = 1
+                    graph.es[graph.ecount()-1]['CanBeConnectedToPenetratingTree'] = 1
 
             elif (line % 2) != 0:
 
                 graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + x + 1)
-                graph.es[graph.ecount() - 1]['CanBeConnectedToCB'] = 0
+                graph.es[graph.ecount() - 1]['CanBeConnectedToPenetratingTree'] = 0
 
             else:
 
                 graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + x + 1)
-                graph.es[graph.ecount() - 1]['CanBeConnectedToCB'] = 0
+                graph.es[graph.ecount() - 1]['CanBeConnectedToPenetratingTree'] = 0
 
                 if (line % 4) == 0:
 
                     if (vertices_in_current_line[i] % 2) == 0:
 
                         graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + 1)
-                        graph.es[graph.ecount() - 1]['CanBeConnectedToCB'] = 1
+                        graph.es[graph.ecount() - 1]['CanBeConnectedToPenetratingTree'] = 1
 
                     else:
 
@@ -123,7 +123,7 @@ def create_plane(graph, x, y, z, l_honeycomb, coord_lim):
                         else:
 
                             graph.add_edge(vertices_in_current_line[i], vertices_in_current_line[i] + 1)
-                            graph.es[graph.ecount() - 1]['CanBeConnectedToCB'] = 1
+                            graph.es[graph.ecount() - 1]['CanBeConnectedToPenetratingTree'] = 1
 
                     else:
 
@@ -159,7 +159,7 @@ def create_plane(graph, x, y, z, l_honeycomb, coord_lim):
         for j in range(len(nodes_slanting_to_the_left)):
 
             graph.add_edge(nodes_slanting_to_the_left[j], nodes_slanting_to_left_upper_level[j])
-            graph.es[graph.ecount() - 1]['CanBeConnectedToCB'] = 0
+            graph.es[graph.ecount() - 1]['CanBeConnectedToPenetratingTree'] = 0
 
     else:
 
@@ -185,11 +185,11 @@ def create_plane(graph, x, y, z, l_honeycomb, coord_lim):
         for j in range(len(nodes_slanting_to_the_right)):
 
             graph.add_edge(nodes_slanting_to_the_right[j], nodes_slanting_to_the_right_upper_level[j])
-            graph.es[graph.ecount() - 1]['CanBeConnectedToCB'] = 0
+            graph.es[graph.ecount() - 1]['CanBeConnectedToPenetratingTree'] = 0
 
     for edge in range(graph.ecount()):
 
-        if graph.es[edge]['CanBeConnectedToCB'] == 1:
+        if graph.es[edge]['CanBeConnectedToPenetratingTree'] == 1:
 
             x_source = graph.vs[graph.es[edge].source]['x_coordinate']
             x_target = graph.vs[graph.es[edge].target]['x_coordinate']
@@ -202,6 +202,11 @@ def create_plane(graph, x, y, z, l_honeycomb, coord_lim):
 
     graph.es['PartOfCapBed'] = 1
     graph.vs['PartOfCapBed'] = 1
+    graph.es['PartOfPenetratingTree'] = 0
+    graph.vs['PartOfPenetratingTree'] = 0
+    graph.es['connection_CB_Pene'] = 0
+    graph.vs['attachmentVertex'] = 0
+    graph.vs['CapBedConnection'] = 0
 
     return graph
 
@@ -244,7 +249,7 @@ def add_penetrating_tree_to_cap_bed(graph_penetrating_tree, graph_capillary_bed)
 
             for edge in range(graph_capillary_bed.ecount()):
 
-                if graph_capillary_bed.es[edge]['CanBeConnectedToCB'] == 1:
+                if graph_capillary_bed.es[edge]['CanBeConnectedToPenetratingTree'] == 1:
 
                     x_vertex = graph_capillary_bed.vs[vertex_new]['x_coordinate']
                     y_vertex = graph_capillary_bed.vs[vertex_new]['y_coordinate']
