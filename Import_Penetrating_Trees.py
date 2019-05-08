@@ -2,6 +2,37 @@ import numpy as np
 import pickle
 import igraph
 import math
+import random
+
+
+def random_choice_of_trees(number_of_penetrating_vein_trees, number_of_penetrating_artery_trees):
+
+    # Number of available files
+
+    number_arteries = 58
+    number_veins = 103
+
+    vein_files = []
+    artery_files = []
+
+    artery_trees_files = list(range(number_arteries))
+    vein_trees_files = list(range(number_veins))
+
+    for i in range(number_of_penetrating_vein_trees):
+
+        vein_i = random.choice(vein_trees_files)
+        vein_files.append(vein_i)
+        vein_trees_files.remove(vein_i)
+
+    for j in range(number_of_penetrating_artery_trees):
+
+        artery_j = random.choice(artery_trees_files)
+        artery_files.append(artery_j)
+        artery_trees_files.remove(artery_j)
+
+    needed_files = {'Files_arteries': artery_files, 'Files_veins': vein_files}
+
+    return needed_files
 
 
 def get_penetrating_tree_from_pkl_file(file_path, file_id):
@@ -71,6 +102,36 @@ def get_penetrating_tree_from_pkl_file(file_path, file_id):
 
     return g
 
+def get_coordinates_limits_from_several_graphs(graphs):
+
+    x_min = []
+    x_max = []
+    y_min = []
+    y_max = []
+    z_min = []
+    z_max = []
+
+    for graph in graphs:
+
+        limites_temp = coordinates_limits(graph)
+
+        x_min.append(limites_temp['x_min'])
+        x_max.append(limites_temp['x_max'])
+        y_min.append(limites_temp['y_min'])
+        y_max.append(limites_temp['y_max'])
+        z_min.append(limites_temp['z_min'])
+        z_max.append(limites_temp['z_max'])
+
+    coordinates_limits_several_graphs = {}
+
+    coordinates_limits_several_graphs['x_min'] = min(x_min)
+    coordinates_limits_several_graphs['x_max'] = max(x_max)
+    coordinates_limits_several_graphs['y_min'] = min(y_min)
+    coordinates_limits_several_graphs['y_max'] = max(y_max)
+    coordinates_limits_several_graphs['z_min'] = min(z_min)
+    coordinates_limits_several_graphs['z_max'] = max(z_max)
+
+    return coordinates_limits_several_graphs
 
 def coordinates_limits(_graph):
 
@@ -89,4 +150,26 @@ def coordinates_limits(_graph):
 
     return coordinate_limits
 
+
+def get_number_of_combs(coord_limits, l_honeycomb):
+
+    delta_x = coord_limits['x_max'] - coord_limits['x_min']
+    delta_y = coord_limits['y_max'] - coord_limits['y_min']
+    delta_z = coord_limits['z_max'] - coord_limits['z_min']
+
+    x_0 = int((delta_x - 0.5 * l_honeycomb) / (1.5 * l_honeycomb)) + 1
+    y_0 = int(delta_y / (2 * l_honeycomb * math.cos(30 * 2 * math.pi / 360))) + 1
+    z_0 = int(delta_z / l_honeycomb) + 2
+
+    if (x_0 % 2) == 0:
+
+        x_0 += 1
+
+    else:
+
+        None
+
+    number_of_combs = [x_0, y_0, z_0]
+
+    return number_of_combs
 
