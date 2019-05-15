@@ -43,6 +43,7 @@ def get_penetrating_tree_from_pkl_file(file_path, file_id):
     file_name_edges = '\\' + str(file_id) + '_edgesDict.pkl'
     file_name_vertices = '\\' + str(file_id) + '_verticesDict.pkl'
 
+
     with open(path_ + file_name_edges, 'rb') as f:
 
         data_edge = pickle.load(f, encoding='latin1')
@@ -102,6 +103,7 @@ def get_penetrating_tree_from_pkl_file(file_path, file_id):
 
     return g
 
+
 def get_coordinates_limits_from_several_graphs(graphs):
 
     x_min = []
@@ -159,7 +161,7 @@ def get_number_of_combs(coord_limits, l_honeycomb):
 
     x_0 = int((delta_x - 0.5 * l_honeycomb) / (1.5 * l_honeycomb)) + 1
     y_0 = int(delta_y / (2 * l_honeycomb * math.cos(30 * 2 * math.pi / 360))) + 1
-    z_0 = int(delta_z / l_honeycomb) + 2
+    z_0 = int(delta_z / (l_honeycomb * 0.5)) + 2
 
     if (x_0 % 2) == 0:
 

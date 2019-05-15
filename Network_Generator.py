@@ -40,7 +40,7 @@ def create_plane(graph, x, y, z, l_honeycomb, coord_lim):
 
             # Create Coordinates
 
-            graph.vs[vertices_in_current_line[i]]['z_coordinate'] = graph.vs[0]['z_coordinate'] + z * l_honeycomb
+            graph.vs[vertices_in_current_line[i]]['z_coordinate'] = graph.vs[0]['z_coordinate'] + z * l_honeycomb*0.5
 
             if (line % 2) == 0:
 

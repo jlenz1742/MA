@@ -85,6 +85,14 @@ all_penetrating_trees = graphs_artery_penetrating_trees + graphs_vein_penetratin
 
 coordinates_limits = Import_Penetrating_Trees.get_coordinates_limits_from_several_graphs(all_penetrating_trees)
 
+coordinates_limits['x_min'] = 0
+coordinates_limits['x_max'] = 400
+coordinates_limits['y_min'] = 0
+coordinates_limits['y_max'] = 400
+coordinates_limits['z_min'] = 0
+coordinates_limits['z_max'] = 400
+
+
 # Calculate number of combs in each direction (x, y, z) to generate the honeycomb network
 
 number_of_combs = Import_Penetrating_Trees.get_number_of_combs(coordinates_limits, length_honeycomb)
@@ -98,17 +106,20 @@ print('number of combs: ', number_of_combs)
 
 # Generate whole network including penetrating trees -------------------------------------------------------------------
 
-
-# Generate capillary bed (honeycomb network) for cuboid which is limited by coordinate min/max of penetrating trees
-
+#
+# # Generate capillary bed (honeycomb network) for cuboid which is limited by coordinate min/max of penetrating trees
+#
 graph_main = Network_Generator.create_3d_graph(graph_main, number_of_combs[0], number_of_combs[1], number_of_combs[2],
                                                length_honeycomb, coordinates_limits)
 
-# Add penetrating trees (veins/arteries) to capillary bed
 
-for graph in all_penetrating_trees:
 
-    graph_main = Network_Generator.add_penetrating_tree_to_cap_bed(graph, graph_main)
+#
+# # Add penetrating trees (veins/arteries) to capillary bed
+#
+# for graph in all_penetrating_trees:
+#
+#     graph_main = Network_Generator.add_penetrating_tree_to_cap_bed(graph, graph_main)
 
 
 # TRACER PATH ----------------------------------------------------------------------------------------------------------
@@ -122,10 +133,6 @@ Plot.plot_graph(graph_main)
 
 # TESTING --------------------------------------------------------------------------------------------------------------
 
-print(ig.summary(graph_main))
-print(graph_main.es[10])
-print(graph_main.vs[10])
-
-
-
-
+# print(ig.summary(graph_main))
+# print(graph_main.es[10])
+# print(graph_main.vs[10])
