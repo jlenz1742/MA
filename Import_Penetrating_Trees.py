@@ -35,7 +35,33 @@ def random_choice_of_trees(number_of_penetrating_vein_trees, number_of_penetrati
     return needed_files
 
 
-def get_penetrating_tree_from_pkl_file(file_path, file_id):
+def random_choice_of_arterial_tree():
+
+    # Number of available files
+
+    number_files = 58
+
+    artery_trees_files = list(range(number_files))
+
+    random_arterial_tree = random.choice(artery_trees_files)
+
+    return random_arterial_tree
+
+
+def random_choice_of_venous_tree():
+
+    # Number of available files
+
+    number_files = 103
+
+    veins_trees_files = list(range(number_files))
+
+    random_venous_tree = random.choice(veins_trees_files)
+
+    return random_venous_tree
+
+
+def get_penetrating_tree_from_pkl_file(file_path, file_id, scaling_factor):
 
     ''' Function reads pkl file and creates graph with the most important attributes. '''
 
@@ -71,9 +97,9 @@ def get_penetrating_tree_from_pkl_file(file_path, file_id):
 
     for vertex in range(len(data_vertex['coords'])):
 
-        g.vs[vertex]['x_coordinate'] = data_vertex['coords'][vertex][0]
-        g.vs[vertex]['y_coordinate'] = data_vertex['coords'][vertex][1]
-        g.vs[vertex]['z_coordinate'] = data_vertex['coords'][vertex][2]
+        g.vs[vertex]['x_coordinate'] = data_vertex['coords'][vertex][0]*scaling_factor
+        g.vs[vertex]['y_coordinate'] = data_vertex['coords'][vertex][1]*scaling_factor
+        g.vs[vertex]['z_coordinate'] = data_vertex['coords'][vertex][2]*scaling_factor
 
         neighbors_current_vertex = g.neighbors(vertex)
 
@@ -134,6 +160,7 @@ def get_coordinates_limits_from_several_graphs(graphs):
     coordinates_limits_several_graphs['z_max'] = max(z_max)
 
     return coordinates_limits_several_graphs
+
 
 def coordinates_limits(_graph):
 

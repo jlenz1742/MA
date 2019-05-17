@@ -20,12 +20,12 @@ import Import_Penetrating_Trees
 path_artery = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\database_penetrating_trees\arteryDB'
 path_vein = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\database_penetrating_trees\veinDB'
 
-number_of_penetrating_vein_trees = 0
-number_of_penetrating_artery_trees = 1
+number_of_penetrating_vein_trees = 2
+number_of_penetrating_artery_trees = 2
 
 # Length hexagon equal to 62 microns (Diss Schmid)
 
-length_honeycomb = 62
+length_honeycomb = 150
 initial_diameter = 1.0
 
 # Specify inlet and outlet pores
@@ -67,14 +67,14 @@ graphs_vein_penetrating_trees = []
 
 for artery_file in files_arteries:
 
-    graph_temp = Import_Penetrating_Trees.get_penetrating_tree_from_pkl_file(path_artery, artery_file)
+    graph_temp = Import_Penetrating_Trees.get_penetrating_tree_from_pkl_file(path_artery, artery_file, 1)
     graphs_artery_penetrating_trees.append(graph_temp)
 
 # Import of vein graphs
 
 for vein_file in files_veins:
 
-    graph_temp = Import_Penetrating_Trees.get_penetrating_tree_from_pkl_file(path_vein, vein_file)
+    graph_temp = Import_Penetrating_Trees.get_penetrating_tree_from_pkl_file(path_vein, vein_file, 1)
     graphs_artery_penetrating_trees.append(graph_temp)
 
 # Merge lists with vein and artery graphs

@@ -25,14 +25,23 @@ number_of_penetrating_artery_trees = 1
 
 # Length hexagon equal to 62 microns (Diss Schmid)
 
-length_honeycomb = 62
+length_honeycomb = 50
 initial_diameter = 1.0
+
+# Penetrating Trees
+
+length_x = 1000
+length_y = 1000
+scaling_factor = 0.66
+
+# Honeycomb Penetrating Trees (geometrical help only)
+
+length_hexagon_penetrating_trees = 150
 
 # Specify inlet and outlet pores
 
 inlet_pores = [0, 1, 2, 3]
 outlet_pores = [152, 153, 154, 155]
-
 start_node_tracer = 0
 
 # BC
@@ -42,7 +51,7 @@ pressure_outlet_pores = 1
 
 ########################################################################################################################
 #                                                                                                                      #
-#                                                  Preparation                                                         #
+#                                                      Test                                                            #
 #                                                                                                                      #
 ########################################################################################################################
 
@@ -50,89 +59,71 @@ pressure_outlet_pores = 1
 
 graph_main = ig.Graph()
 
-# Evaluate penetrating trees (files) which should be part of the model
+# Create geometrical help (graph)
 
-files = Import_Penetrating_Trees.random_choice_of_trees(number_of_penetrating_vein_trees,
-                                                        number_of_penetrating_artery_trees)
+graph_geometrical_help = ig.Graph()
 
-files_arteries = files['Files_arteries']
-files_veins = files['Files_veins']
-
-# Import penetrating trees
-
-graphs_artery_penetrating_trees = []
-graphs_vein_penetrating_trees = []
-
-# Import of artery graphs
-
-for artery_file in files_arteries:
-
-    graph_temp = Import_Penetrating_Trees.get_penetrating_tree_from_pkl_file(path_artery, artery_file)
-    graphs_artery_penetrating_trees.append(graph_temp)
-
-# Import of vein graphs
-
-for vein_file in files_veins:
-
-    graph_temp = Import_Penetrating_Trees.get_penetrating_tree_from_pkl_file(path_vein, vein_file)
-    graphs_artery_penetrating_trees.append(graph_temp)
-
-# Merge lists with vein and artery graphs
-
-all_penetrating_trees = graphs_artery_penetrating_trees + graphs_vein_penetrating_trees
-
-# Find max/min values for x, y and z coordinate (consider every penetrating tree (veins and arteries))
-
-coordinates_limits = Import_Penetrating_Trees.get_coordinates_limits_from_several_graphs(all_penetrating_trees)
-
+coordinates_limits = dict()
 coordinates_limits['x_min'] = 0
-coordinates_limits['x_max'] = 400
+coordinates_limits['x_max'] = length_x
 coordinates_limits['y_min'] = 0
-coordinates_limits['y_max'] = 400
+coordinates_limits['y_max'] = length_y
 coordinates_limits['z_min'] = 0
-coordinates_limits['z_max'] = 400
+coordinates_limits['z_max'] = 0
+
+combs = Import_Penetrating_Trees.get_number_of_combs(coordinates_limits, length_hexagon_penetrating_trees)
+
+graph_geometrical_help = Network_Generator.create_plane_geometrical_help(graph_geometrical_help, combs[0], combs[1], 0,
+                                                                         length_hexagon_penetrating_trees,
+                                                                         coordinates_limits)
+# Plot.plot_geometrical_help(graph_geometrical_help)
+
+# Create Penetrating Tree Graph (Connected)
+
+graph_penetrating = ig.Graph()
+
+for root in range(graph_geometrical_help.vcount()):
+
+    if graph_geometrical_help.vs[root]['vein_point']:
+
+        x_coordinate_root = graph_geometrical_help.vs[root]['x_coordinate']
+        y_coordinate_root = graph_geometrical_help.vs[root]['y_coordinate']
+        z_coordinate_root = graph_geometrical_help.vs[root]['z_coordinate']
+
+        start_point = (x_coordinate_root, y_coordinate_root, z_coordinate_root)
+
+        id_vein = Import_Penetrating_Trees.random_choice_of_venous_tree()
+
+        venous_tree = Import_Penetrating_Trees.get_penetrating_tree_from_pkl_file(path_vein, id_vein, scaling_factor)
+
+        graph_penetrating = Network_Generator.add_penetrating_tree_to_tot(venous_tree, graph_penetrating, start_point)
+
+    elif graph_geometrical_help.vs[root]['artery_point']:
+
+        x_coordinate_root = graph_geometrical_help.vs[root]['x_coordinate']
+        y_coordinate_root = graph_geometrical_help.vs[root]['y_coordinate']
+        z_coordinate_root = graph_geometrical_help.vs[root]['z_coordinate']
+
+        start_point = (x_coordinate_root, y_coordinate_root, z_coordinate_root)
+
+        id_arterial = Import_Penetrating_Trees.random_choice_of_arterial_tree()
+
+        arterial_tree = Import_Penetrating_Trees.get_penetrating_tree_from_pkl_file(path_artery, id_arterial,
+                                                                                    scaling_factor)
+
+        graph_penetrating = Network_Generator.add_penetrating_tree_to_tot(arterial_tree, graph_penetrating, start_point)
+
+# Plot.plot_graph(graph_penetrating)
+
+coord_lim_cap_bed = Import_Penetrating_Trees.coordinates_limits(graph_penetrating)
+combs_cap_bed = Import_Penetrating_Trees.get_number_of_combs(coord_lim_cap_bed, length_honeycomb)
+print(combs_cap_bed)
 
 
-# Calculate number of combs in each direction (x, y, z) to generate the honeycomb network
+graph_main = Network_Generator.create_3d_graph(graph_main, combs_cap_bed[0], combs_cap_bed[1], combs_cap_bed[2],
+                                               length_honeycomb, coord_lim_cap_bed)
 
-number_of_combs = Import_Penetrating_Trees.get_number_of_combs(coordinates_limits, length_honeycomb)
-print('number of combs: ', number_of_combs)
-
-########################################################################################################################
-#                                                                                                                      #
-#                                                  EXECUTION                                                           #
-#                                                                                                                      #
-########################################################################################################################
-
-# Generate whole network including penetrating trees -------------------------------------------------------------------
-
-#
-# # Generate capillary bed (honeycomb network) for cuboid which is limited by coordinate min/max of penetrating trees
-#
-graph_main = Network_Generator.create_3d_graph(graph_main, number_of_combs[0], number_of_combs[1], number_of_combs[2],
-                                               length_honeycomb, coordinates_limits)
-
-
-
-#
-# # Add penetrating trees (veins/arteries) to capillary bed
-#
-# for graph in all_penetrating_trees:
-#
-#     graph_main = Network_Generator.add_penetrating_tree_to_cap_bed(graph, graph_main)
-
-
-# TRACER PATH ----------------------------------------------------------------------------------------------------------
-
-# Plot.plot_path(graph_main, path)
-
-
-# PLOT -----------------------------------------------------------------------------------------------------------------
+graph_main = Network_Generator.add_penetrating_tree_to_cap_bed(graph_penetrating, graph_main)
 
 Plot.plot_graph(graph_main)
 
-# TESTING --------------------------------------------------------------------------------------------------------------
-
-# print(ig.summary(graph_main))
-# print(graph_main.es[10])
-# print(graph_main.vs[10])
