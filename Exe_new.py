@@ -20,12 +20,12 @@ import Import_Penetrating_Trees
 path_artery = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\database_penetrating_trees\arteryDB'
 path_vein = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\database_penetrating_trees\veinDB'
 
-number_of_penetrating_vein_trees = 0
-number_of_penetrating_artery_trees = 1
+# number_of_penetrating_vein_trees = 1
+# number_of_penetrating_artery_trees = 1
 
 # Length hexagon equal to 62 microns (Diss Schmid)
 
-length_honeycomb = 50
+length_honeycomb = 100
 initial_diameter = 1.0
 
 # Penetrating Trees
@@ -36,7 +36,7 @@ scaling_factor = 0.66
 
 # Honeycomb Penetrating Trees (geometrical help only)
 
-length_hexagon_penetrating_trees = 150
+length_hexagon_penetrating_trees = 500
 
 # Specify inlet and outlet pores
 
