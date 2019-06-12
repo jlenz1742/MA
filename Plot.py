@@ -28,17 +28,21 @@ def plot_graph(graph):
         z.append(graph.vs[graph.es[edge].target]['z_coordinate'])
 
         try:
-            if graph.es[edge]['connection_CB_Pene'] == 1:
+            if graph.es[edge]['Type'] == 0:
+
+                ax.plot(x, y, z, color='lightgray')
+
+            elif graph.es[edge]['Type'] == 1:
 
                 ax.plot(x, y, z, color='blue')
 
-            elif graph.es[edge]['PartOfPenetratingTree'] == 1:
-
-                ax.plot(x, y, z, color='green')
-
-            else:
+            elif graph.es[edge]['Type'] == 2:
 
                 ax.plot(x, y, z, color='red')
+
+            elif graph.es[edge]['Type'] == 3:
+
+                ax.plot(x, y, z, color='dimgray')
 
         except:
 

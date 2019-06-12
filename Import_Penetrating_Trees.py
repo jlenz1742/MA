@@ -61,7 +61,7 @@ def random_choice_of_venous_tree():
     return random_venous_tree
 
 
-def get_penetrating_tree_from_pkl_file(file_path, file_id, scaling_factor):
+def get_penetrating_tree_from_pkl_file(file_path, file_id, scaling_factor, type_key_number):
 
     ''' Function reads pkl file and creates graph with the most important attributes. '''
 
@@ -124,8 +124,11 @@ def get_penetrating_tree_from_pkl_file(file_path, file_id, scaling_factor):
             l_tot += segment_length
             sum_resistances += segment_resistance
 
-        g.es[edge]['edge_length'] = l_tot
-        g.es[edge]['diameter'] = math.pow(l_tot / sum_resistances, 0.25)
+        g.es[edge]['edge_length'] = l_tot / math.pow(10, 6)
+        g.es[edge]['diameter'] = math.pow(l_tot / sum_resistances, 0.25) / math.pow(10, 6)
+
+    g.es['Type'] = type_key_number
+    g.vs['Type'] = type_key_number
 
     return g
 

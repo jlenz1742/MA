@@ -1,11 +1,28 @@
 import math
+import Beta_Distribution
 
 
-def create_3d_graph(graph, x, y, z, l_honeycomb, coord):
+def create_3d_graph(graph, x, y, z, l_honeycomb, coord, diameter_info):
 
     for level in range(z):
 
         graph = create_plane(graph, x, y, level, l_honeycomb, coord)
+
+    for edge in range(graph.ecount()):
+
+        value = Beta_Distribution.get_value_from_beta_distribution(diameter_info['mean'], diameter_info['std'])
+
+        if value > diameter_info['max']:
+
+            graph.es[edge]['diameter'] = diameter_info['max']
+
+        elif value < diameter_info['min']:
+
+            graph.es[edge]['diameter'] = diameter_info['min']
+
+        else:
+
+            graph.es[edge]['diameter'] = value
 
     return graph
 
@@ -447,12 +464,15 @@ def create_plane(graph, x, y, z, l_honeycomb, coord_lim):
     graph.vs['attachmentVertex'] = 0
     graph.vs['CapBedConnection'] = 0
 
+    graph.es['edge_length'] = l_honeycomb / math.pow(10, 6)
+
+    graph.es['Type'] = 0
+    graph.vs['Type'] = 0
+
     return graph
 
 
 def add_penetrating_tree_to_tot(graph_to_add, graph_penetrating_tot, start_point):
-
-    # key_vein_artery = 1: Vein, key_vein_artery = 2: Artery
 
     # Find vectorial displacement
 
@@ -486,6 +506,7 @@ def add_penetrating_tree_to_tot(graph_to_add, graph_penetrating_tot, start_point
         graph_penetrating_tot.vs[vertex_new]['z_coordinate'] = graph_to_add.vs[vertex]['z_coordinate'] - delta_z
         graph_penetrating_tot.vs[vertex_new]['attachmentVertex'] = graph_to_add.vs[vertex]['attachmentVertex']
         graph_penetrating_tot.vs[vertex_new]['CapBedConnection'] = graph_to_add.vs[vertex]['CapBedConnection']
+        graph_penetrating_tot.vs[vertex_new]['Type'] = graph_to_add.vs[vertex]['Type']
 
         graph_penetrating_tot.vs[vertex_new]['PartOfPenetratingTree'] = 1
 
@@ -496,11 +517,19 @@ def add_penetrating_tree_to_tot(graph_to_add, graph_penetrating_tot, start_point
 
             if neighbor > vertex_new:
 
-                graph_penetrating_tot.add_edge(vertex_new, neighbor, edge_length=0, diameter=0, PartOfPenetratingTree=1)
+                # Damit attribute übernommen werden können
+                edge_id_origin_tree = graph_to_add.get_eid(vertex, neighbor-nodes_before_penetrating_tree)
 
-        else:
+                graph_penetrating_tot.add_edge(vertex_new, neighbor,
+                                               edge_length=graph_to_add.es[edge_id_origin_tree]['edge_length'],
+                                               diameter=graph_to_add.es[edge_id_origin_tree]['diameter'],
+                                               PartOfPenetratingTree=1,
+                                               Type=graph_to_add.es[edge_id_origin_tree]['Type'])
 
-            continue
+            else:
+
+                continue
+
 
     return graph_penetrating_tot
 
@@ -525,6 +554,7 @@ def add_penetrating_tree_to_cap_bed(graph_penetrating_tree, graph_capillary_bed)
         graph_capillary_bed.vs[vertex_new]['z_coordinate'] = graph_penetrating_tree.vs[vertex]['z_coordinate']
         graph_capillary_bed.vs[vertex_new]['attachmentVertex'] = graph_penetrating_tree.vs[vertex]['attachmentVertex']
         graph_capillary_bed.vs[vertex_new]['CapBedConnection'] = graph_penetrating_tree.vs[vertex]['CapBedConnection']
+        graph_capillary_bed.vs[vertex_new]['Type'] = graph_penetrating_tree.vs[vertex]['Type']
 
         graph_capillary_bed.vs[vertex_new]['PartOfPenetratingTree'] = 1
 
@@ -534,7 +564,14 @@ def add_penetrating_tree_to_cap_bed(graph_penetrating_tree, graph_capillary_bed)
         for neighbor in neighbors_new:
 
             if neighbor > vertex_new:
-                graph_capillary_bed.add_edge(vertex_new, neighbor, edge_length=0, diameter=0, PartOfPenetratingTree=1)
+
+                edge_id_origin_tree = graph_penetrating_tree.get_eid(vertex, neighbor - nodes_before_penetrating_tree)
+
+                graph_capillary_bed.add_edge(vertex_new, neighbor,
+                                             edge_length=graph_penetrating_tree.es[edge_id_origin_tree]['edge_length'],
+                                             diameter=graph_penetrating_tree.es[edge_id_origin_tree]['diameter'],
+                                             PartOfPenetratingTree=1,
+                                             Type=graph_penetrating_tree.es[edge_id_origin_tree]['Type'])
 
         if graph_penetrating_tree.vs[vertex]['CapBedConnection'] == 1:
 
@@ -563,13 +600,35 @@ def add_penetrating_tree_to_cap_bed(graph_penetrating_tree, graph_capillary_bed)
 
                     continue
 
-            print(list_distances)
+            start_node_first_edge = graph_capillary_bed.es[list_edges[list_distances.index(
+                min(list_distances))]].source
 
-            graph_capillary_bed.add_edge(graph_capillary_bed.es[list_edges[list_distances.index(
-                min(list_distances))]].source, vertex_new, connection_CB_Pene=1)
+            edge_length_start_node = math.sqrt(math.pow(graph_capillary_bed.vs[start_node_first_edge]['x_coordinate'] -
+                                                        graph_capillary_bed.vs[vertex_new]['x_coordinate'], 2) +
+                                               math.pow(graph_capillary_bed.vs[start_node_first_edge]['y_coordinate'] -
+                                                        graph_capillary_bed.vs[vertex_new]['y_coordinate'], 2) +
+                                               math.pow(graph_capillary_bed.vs[start_node_first_edge]['z_coordinate'] -
+                                                        graph_capillary_bed.vs[vertex_new]['z_coordinate'], 2))
 
-            graph_capillary_bed.add_edge(graph_capillary_bed.es[list_edges[list_distances.index(
-                min(list_distances))]].target, vertex_new, connection_CB_Pene=1)
+            start_node_second_edge = graph_capillary_bed.es[list_edges[list_distances.index(
+                min(list_distances))]].target
+
+            edge_length_end_node = math.sqrt(math.pow(graph_capillary_bed.vs[start_node_second_edge]['x_coordinate'] -
+                                                      graph_capillary_bed.vs[vertex_new]['x_coordinate'], 2) +
+                                             math.pow(graph_capillary_bed.vs[start_node_second_edge]['y_coordinate'] -
+                                                      graph_capillary_bed.vs[vertex_new]['y_coordinate'], 2) +
+                                             math.pow(graph_capillary_bed.vs[start_node_second_edge]['z_coordinate'] -
+                                                      graph_capillary_bed.vs[vertex_new]['z_coordinate'], 2))
+
+            graph_capillary_bed.add_edge(start_node_first_edge, vertex_new, connection_CB_Pene=1,
+                                         diameter=4 / math.pow(10, 6), edge_length=edge_length_start_node / math.pow(10,
+                                                                                                                     6),
+                                         Type=3)
+
+            graph_capillary_bed.add_edge(start_node_second_edge, vertex_new, connection_CB_Pene=1,
+                                         diameter=4 / math.pow(10, 6), edge_length=edge_length_end_node / math.pow(10,
+                                                                                                                   6),
+                                         Type=3)
 
             graph_capillary_bed.delete_edges(list_edges[list_distances.index(min(list_distances))])
 
