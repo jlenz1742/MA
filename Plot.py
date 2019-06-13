@@ -58,6 +58,7 @@ def plot_graph(graph):
 
     plt.show()
 
+
 def plot_geometrical_help(graph):
 
     # Graph need to have coordinates of each node as vertex attribute
@@ -106,6 +107,7 @@ def plot_geometrical_help(graph):
 
     plt.show()
 
+
 def plot_path(graph, path):
 
     mpl.rcParams['legend.fontsize'] = 10
@@ -132,3 +134,49 @@ def plot_path(graph, path):
         ax.plot(x, y, z, color='red')
 
     plt.show()
+
+
+def plot_chosen_region(graph):
+
+
+    # Graph need to have coordinates of each node as vertex attribute
+
+    mpl.rcParams['legend.fontsize'] = 10
+
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+
+    for edge in range(graph.ecount()):
+
+        x = []
+        y = []
+        z = []
+
+        x.append(graph.vs[graph.es[edge].source]['x_coordinate'])
+        x.append(graph.vs[graph.es[edge].target]['x_coordinate'])
+
+        y.append(graph.vs[graph.es[edge].source]['y_coordinate'])
+        y.append(graph.vs[graph.es[edge].target]['y_coordinate'])
+
+        z.append(graph.vs[graph.es[edge].source]['z_coordinate'])
+        z.append(graph.vs[graph.es[edge].target]['z_coordinate'])
+
+
+        if graph.es[edge]['Activated'] == 1:
+
+            ax.plot(x, y, z, color='red')
+
+        else:
+
+            ax.plot(x, y, z, color='white')
+
+    for vertex in range(graph.vcount()):
+
+        if graph.vs[vertex]['attachmentVertex'] == 1:
+            ax.scatter(graph.vs[vertex]['x_coordinate'], graph.vs[vertex]['y_coordinate'], color='black')
+
+    plt.xlabel('X')
+    plt.ylabel('Y')
+
+    plt.show()
+    return graph

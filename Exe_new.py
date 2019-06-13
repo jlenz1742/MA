@@ -9,7 +9,7 @@ import Plot
 import math
 import Import_Penetrating_Trees
 import Export_of_graph
-
+import Chose_activated_region
 ########################################################################################################################
 #                                                                                                                      #
 #                                                   INPUT                                                              #
@@ -26,7 +26,7 @@ path_vein = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\databas
 
 # Length hexagon equal to 62 microns (Diss Schmid)
 
-length_honeycomb = 62
+length_honeycomb = 45
 
 # Beta-Distribution for diameters of capillary bed (in meters)
 
@@ -35,19 +35,24 @@ diameter_mean = 4 / math.pow(10, 6)
 diameter_min = 2.5 / math.pow(10, 6)
 diameter_max = 9 / math.pow(10, 6)
 
-# Penetrating Trees
+# Penetrating Trees (in microns)
 
 length_x = 500
 length_y = 500
 scaling_factor = 0.66
 
-# Honeycomb Penetrating Trees (geometrical help only)
+# Honeycomb Penetrating Trees (geometrical help only, in microns)
 
 length_hexagon_penetrating_trees = 500
 
 # BC (in Pascal)
 
 pressure_veins = 1333.22
+
+# Activated Edges ( in microns)
+
+coordinates_sphere = {'x': 300, 'y': 300, 'z': 300}
+radius_sphere = 300
 
 ########################################################################################################################
 #                                                                                                                      #
@@ -131,7 +136,11 @@ graph_main = Network_Generator.create_3d_graph(graph_main, combs_cap_bed[0], com
 
 graph_main = Network_Generator.add_penetrating_tree_to_cap_bed(graph_penetrating, graph_main)
 
-Export_of_graph.create_csv_files_from_graph(graph_main, pressure_veins)
+graph_main = Chose_activated_region.define_activated_region(graph_main, coordinates_sphere, radius_sphere)
+
+Plot.plot_chosen_region(graph_main)
+
+Export_of_graph.create_csv_files_from_graph(graph_main, pressure_veins, radius_sphere, coordinates_sphere)
 
 # Plot.plot_graph(graph_main)
 
