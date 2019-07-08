@@ -1,11 +1,32 @@
 import pandas as pd
-import numpy as np
 import math
+import os
+import csv
+import time
+import json
 
 
-def create_csv_files_from_graph(graph, p_veins, r_sphere, coords_sphere):
+def create_csv_files_from_graph(graph, p_veins, key_word_all, summary_information, key_number_modi):
 
     ''' Function transforms graph to three csv files to proceed with the simulation '''
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #                                                  Preparation                                                     #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    time_str = time.strftime("%Y%m%d_%H%M%S")
+    os.makedirs('Export/' + time_str)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #                                                    Read Me                                                       #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    with open('Export/' + time_str + '/read_me.txt', 'a+') as file:
+        file.write(json.dumps(summary_information))
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -18,7 +39,7 @@ def create_csv_files_from_graph(graph, p_veins, r_sphere, coords_sphere):
     node_data_df['x'] = [x / math.pow(10, 6) for x in graph.vs['x_coordinate']]
     node_data_df['y'] = [y / math.pow(10, 6) for y in graph.vs['y_coordinate']]
     node_data_df['z'] = [z / math.pow(10, 6) for z in graph.vs['z_coordinate']]
-    node_data_df.to_csv('Export/node_data.csv', index=False, sep=';')
+    node_data_df.to_csv('Export/' + time_str + '/node_data.csv', index=False)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -60,10 +81,10 @@ def create_csv_files_from_graph(graph, p_veins, r_sphere, coords_sphere):
 
     node_boundary_data_df['p'] = pressure
 
-    flux = [np.nan] * len(nodeid)
+    flux = ['nan'] * len(nodeid)
     node_boundary_data_df['flux'] = flux
 
-    node_boundary_data_df.to_csv('Export/node_boundary_data.csv', index=False, sep=';')
+    node_boundary_data_df.to_csv('Export/' + time_str + '/node_boundary_data.csv', index=False)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -85,7 +106,7 @@ def create_csv_files_from_graph(graph, p_veins, r_sphere, coords_sphere):
     edge_data_df['D'] = graph.es['diameter']
     edge_data_df['L'] = graph.es['edge_length']
     # edge_data_df['Type'] = graph.es['Type']
-    edge_data_df.to_csv('Export/edge_data.csv', index=False, sep=';')
+    edge_data_df.to_csv('Export/' + time_str + '/edge_data.csv', index=False)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -93,48 +114,112 @@ def create_csv_files_from_graph(graph, p_veins, r_sphere, coords_sphere):
     #                                                                                                                  #
     ####################################################################################################################
 
-    # activated_edge_ids = []
-    #
-    # for edge in range(graph.ecount()):
-    #
-    #     p1 = graph.es[edge].source
-    #     x_1 = graph.vs[p1]['x_coordinate'] / math.pow(10, 6)
-    #     y_1 = graph.vs[p1]['y_coordinate'] / math.pow(10, 6)
-    #     z_1 = graph.vs[p1]['z_coordinate'] / math.pow(10, 6)
-    #
-    #     p2 = graph.es[edge].target
-    #     x_2 = graph.vs[p2]['x_coordinate'] / math.pow(10, 6)
-    #     y_2 = graph.vs[p2]['y_coordinate'] / math.pow(10, 6)
-    #     z_2 = graph.vs[p2]['z_coordinate'] / math.pow(10, 6)
-    #
-    #     x_3 = coords_sphere['x'] / math.pow(10, 6)
-    #     y_3 = coords_sphere['y'] / math.pow(10, 6)
-    #     z_3 = coords_sphere['z'] / math.pow(10, 6)
-    #
-    #     radius = r_sphere / math.pow(10, 6)
-    #
-    #     a = math.pow(x_2 - x_1, 2) + math.pow(y_2 - y_1, 2) + math.pow(z_2 - z_1, 2)
-    #     b = 2 * ((x_2 - x_1)*(x_1 - x_3) + (y_2 - y_1)*(y_1 - y_3) + (z_2 - z_1)*(z_1 - z_3))
-    #     c = math.pow(x_3, 2) + math.pow(y_3, 2) + math.pow(z_3, 2) + math.pow(x_1, 2) + math.pow(y_1, 2) + \
-    #         math.pow(z_1, 2) - 2 * (x_3 * x_1 + y_3 * y_1 + z_3 * z_1) - math.pow(radius, 2)
-    #
-    #     value = math.pow(b, 2) - 4 * a * c
-    #
-    #     print(value)
-    #     if value >= 0:
-    #
-    #         activated_edge_ids.append(edge)
-    #
-    #     else:
-    #
-    #         continue
-    #
-    # print(activated_edge_ids)
+    activated_eids = []
+
+    for edge in range(graph.ecount()):
+
+        if graph.es[edge]['Activated'] == 1:
+
+            activated_eids.append(edge)
+
+    data = {'Activated': activated_eids}
+    activated_eids_df = pd.DataFrame(data)
+    activated_eids_df_new = activated_eids_df.T
+
+    activated_eids_df_new.to_csv('Export/' + time_str + '/activated_eids_temp.csv', index=False)
+
+    with open('Export/' + time_str + '/activated_eids_temp.csv', 'r') as f:
+        with open('Export/' + time_str + '/activated_eids.csv', 'w') as f1:
+            next(f)  # skip header line
+            for line in f:
+                f1.write(line)
+
+    os.remove('Export/' + time_str + '/activated_eids_temp.csv')
 
     ####################################################################################################################
     #                                                                                                                  #
     #                                                reacting_eids.csv                                                 #
     #                                                                                                                  #
     ####################################################################################################################
+
+    if key_word_all == 0:
+
+        reacting_eids = []
+
+        for edge in range(graph.ecount()):
+
+            if graph.es[edge]['Modifiable'] == 1:
+
+                if key_number_modi == 0:
+
+                    if graph.es[edge]['Type'] == 0 or graph.es[edge]['Type'] == 3:
+
+                        reacting_eids.append(edge)
+
+                elif key_number_modi == 1:
+
+                    if graph.es[edge]['Type'] == 1:
+
+                        reacting_eids.append(edge)
+
+                elif key_number_modi == 2:
+
+                    if graph.es[edge]['Type'] == 1 or graph.es[edge]['Type'] == 0 or graph.es[edge]['Type'] == 3:
+
+                        reacting_eids.append(edge)
+
+                elif key_number_modi == 3:
+
+                    reacting_eids.append(edge)
+
+        data_mod = {'Modifiable': reacting_eids}
+        reacting_eids_df = pd.DataFrame(data_mod)
+        reacting_eids_df_new = reacting_eids_df.T
+
+        reacting_eids_df_new.to_csv('Export/' + time_str + '/reacting_eids_temp.csv', index=False)
+
+        with open('Export/' + time_str + '/reacting_eids_temp.csv', 'r') as f:
+            with open('Export/' + time_str + '/reacting_eids.csv', 'w') as f1:
+                next(f)  # skip header line
+                for line in f:
+                    f1.write(line)
+
+        os.remove('Export/' + time_str + '/reacting_eids_temp.csv')
+
+        with open('Export/' + time_str + '/reacting_eids.csv', newline='') as f:
+            r = csv.reader(f)
+            data = [line for line in r]
+
+        with open('Export/' + time_str + '/reacting_eids.csv', 'w', newline='') as f:
+            w = csv.writer(f)
+            w.writerow(['eid_list'])
+            w.writerows(data)
+
+    else:
+
+        reacting_eids = [1,2,3]
+
+        data_mod = {'Modifiable': reacting_eids}
+        reacting_eids_df = pd.DataFrame(data_mod)
+        reacting_eids_df_new = reacting_eids_df.T
+
+        reacting_eids_df_new.to_csv('Export/' + time_str + '/reacting_eids_temp.csv', index=False)
+
+        with open('Export/' + time_str + '/reacting_eids_temp.csv', 'r') as f:
+            with open('Export/' + time_str + '/reacting_eids.csv', 'w') as f1:
+                next(f)  # skip header line
+                for line in f:
+                    f1.write(line)
+
+        os.remove('Export/' + time_str + '/reacting_eids_temp.csv')
+
+        with open('Export/' + time_str + '/reacting_eids.csv') as f:
+            r = csv.reader(f)
+            data = [line for line in r]
+
+        with open('Export/' + time_str + '/reacting_eids.csv', 'w', encoding='utf-8') as f:
+            w = csv.writer(f)
+            w.writerow(['all'])
+            w.writerows(data)
 
     return

@@ -26,7 +26,7 @@ path_vein = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\databas
 
 # Length hexagon equal to 62 microns (Diss Schmid)
 
-length_honeycomb = 45
+length_honeycomb = 62
 
 # Beta-Distribution for diameters of capillary bed (in meters)
 
@@ -39,7 +39,7 @@ diameter_max = 9 / math.pow(10, 6)
 
 length_x = 500
 length_y = 500
-scaling_factor = 0.66
+scaling_factor = 1
 
 # Honeycomb Penetrating Trees (geometrical help only, in microns)
 
@@ -51,8 +51,24 @@ pressure_veins = 1333.22
 
 # Activated Edges ( in microns)
 
-coordinates_sphere = {'x': 300, 'y': 300, 'z': 300}
-radius_sphere = 300
+coordinates_sphere = {'x': 200, 'y': 200, 'z': 200}
+radius_sphere = 50
+
+# Modifiable Edges -> coordinates should be the same than for the activated edges
+all_edges = 0           # 1 or 0, 0: not all edges, 1: all edges
+coordinates_modifiable_sphere = coordinates_sphere
+radius_sphere_mod = 100
+
+key_modifiable_edges = 3 # 0: Only CB, 1: Only Arteries, 2: CB and Arteries, 3: all
+
+# Summary for txt file
+
+summary_dict = {'L_Honeycomb_CB': length_honeycomb, 'd_std': diameter_standard_deviation, 'd_mean': diameter_mean,
+                'd_min': diameter_min, 'd_max': diameter_max, 'L_x_total': length_x, 'L_y_total': length_y,
+                'L_Honeycomb_Help': length_hexagon_penetrating_trees, 'Coordinates_Sphere': coordinates_sphere,
+                'radius_sphere_activated': radius_sphere, 'Coordinates_modifiable_sphere': coordinates_sphere,
+                'radius_sphere_modifiable': radius_sphere_mod, 'All Edges': all_edges,
+                'Modifiable_Edges_Key': key_modifiable_edges}
 
 ########################################################################################################################
 #                                                                                                                      #
@@ -138,9 +154,15 @@ graph_main = Network_Generator.add_penetrating_tree_to_cap_bed(graph_penetrating
 
 graph_main = Chose_activated_region.define_activated_region(graph_main, coordinates_sphere, radius_sphere)
 
-Plot.plot_chosen_region(graph_main)
+if all_edges == 0:
 
-Export_of_graph.create_csv_files_from_graph(graph_main, pressure_veins, radius_sphere, coordinates_sphere)
+    graph_main = Chose_activated_region.modifiable_region(graph_main, coordinates_modifiable_sphere, radius_sphere_mod)
+
+else:
+
+    None
+
+Export_of_graph.create_csv_files_from_graph(graph_main, pressure_veins, all_edges, summary_dict, key_modifiable_edges)
 
 # Plot.plot_graph(graph_main)
 
