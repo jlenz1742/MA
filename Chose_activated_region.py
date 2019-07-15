@@ -120,6 +120,8 @@ def modifiable_region(graph, coords_sphere, r_sphere):
 
     activated_edge_ids = []
 
+    name = 'modi_radius_' + str(r_sphere)
+
     for edge in range(graph.ecount()):
 
         # Target or source point inside sphere -------------------------------------------------------------------------
@@ -226,7 +228,6 @@ def modifiable_region(graph, coords_sphere, r_sphere):
 
     for activated_edge in activated_edge_ids:
 
-            graph.es[activated_edge]['Modifiable'] = 1
+            graph.es[activated_edge][name] = 1
 
     return graph
-

@@ -387,6 +387,12 @@ def create_plane(graph, x, y, z, l_honeycomb, coord_lim):
 
         start_id += vertices_per_line
 
+    ####################################################################################################################
+    #                                                                                                                  #
+    #                                    Connections between layers (z-direction)                                      #
+    #                                                                                                                  #
+    ####################################################################################################################
+
     if z == 0:
 
         None
@@ -415,7 +421,7 @@ def create_plane(graph, x, y, z, l_honeycomb, coord_lim):
         for j in range(len(nodes_slanting_to_the_left)):
 
             graph.add_edge(nodes_slanting_to_the_left[j], nodes_slanting_to_left_upper_level[j])
-            graph.es[graph.ecount() - 1]['CanBeConnectedToPenetratingTree'] = 0
+            graph.es[graph.ecount() - 1]['CanBeConnectedToPenetratingTree'] = 1
 
     else:
 
@@ -441,7 +447,13 @@ def create_plane(graph, x, y, z, l_honeycomb, coord_lim):
         for j in range(len(nodes_slanting_to_the_right)):
 
             graph.add_edge(nodes_slanting_to_the_right[j], nodes_slanting_to_the_right_upper_level[j])
-            graph.es[graph.ecount() - 1]['CanBeConnectedToPenetratingTree'] = 0
+            graph.es[graph.ecount() - 1]['CanBeConnectedToPenetratingTree'] = 1
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #                                           Coordinates of edge midpoints                                          #
+    #                                                                                                                  #
+    ####################################################################################################################
 
     for edge in range(graph.ecount()):
 

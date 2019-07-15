@@ -6,7 +6,7 @@ import time
 import json
 
 
-def create_csv_files_from_graph(graph, p_veins, key_word_all, summary_information, key_number_modi):
+def create_csv_files_from_graph(graph, p_veins, p_arteries, key_word_all, summary_information, key_number_modi, radii):
 
     ''' Function transforms graph to three csv files to proceed with the simulation '''
 
@@ -18,6 +18,8 @@ def create_csv_files_from_graph(graph, p_veins, key_word_all, summary_informatio
 
     time_str = time.strftime("%Y%m%d_%H%M%S")
     os.makedirs('Export/' + time_str)
+    os.makedirs('Export/' + time_str + '\\' + 'mvn1_edit')
+    os.makedirs('Export/' + time_str + '\\' + 'adjointMethod')
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -39,7 +41,7 @@ def create_csv_files_from_graph(graph, p_veins, key_word_all, summary_informatio
     node_data_df['x'] = [x / math.pow(10, 6) for x in graph.vs['x_coordinate']]
     node_data_df['y'] = [y / math.pow(10, 6) for y in graph.vs['y_coordinate']]
     node_data_df['z'] = [z / math.pow(10, 6) for z in graph.vs['z_coordinate']]
-    node_data_df.to_csv('Export/' + time_str + '/node_data.csv', index=False)
+    node_data_df.to_csv('Export/' + time_str + '\\' + 'mvn1_edit' + '/node_data.csv', index=False)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -68,7 +70,7 @@ def create_csv_files_from_graph(graph, p_veins, key_word_all, summary_informatio
 
             elif graph.vs[vertex]['Type'] == 2:
 
-                pressure.append(5000)
+                pressure.append(p_arteries)
 
         else:
 
@@ -84,7 +86,7 @@ def create_csv_files_from_graph(graph, p_veins, key_word_all, summary_informatio
     flux = ['nan'] * len(nodeid)
     node_boundary_data_df['flux'] = flux
 
-    node_boundary_data_df.to_csv('Export/' + time_str + '/node_boundary_data.csv', index=False)
+    node_boundary_data_df.to_csv('Export/' + time_str + '\\' + 'mvn1_edit' + '/node_boundary_data.csv', index=False)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -105,8 +107,8 @@ def create_csv_files_from_graph(graph, p_veins, key_word_all, summary_informatio
     edge_data_df['n2'] = n_2
     edge_data_df['D'] = graph.es['diameter']
     edge_data_df['L'] = graph.es['edge_length']
-    # edge_data_df['Type'] = graph.es['Type']
-    edge_data_df.to_csv('Export/' + time_str + '/edge_data.csv', index=False)
+    edge_data_df['Type'] = graph.es['Type']
+    edge_data_df.to_csv('Export/' + time_str + '\\' + 'mvn1_edit' + '/edge_data.csv', index=False)
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -126,15 +128,15 @@ def create_csv_files_from_graph(graph, p_veins, key_word_all, summary_informatio
     activated_eids_df = pd.DataFrame(data)
     activated_eids_df_new = activated_eids_df.T
 
-    activated_eids_df_new.to_csv('Export/' + time_str + '/activated_eids_temp.csv', index=False)
+    activated_eids_df_new.to_csv('Export/' + time_str + '\\' + 'adjointMethod' + '/activated_eids_temp.csv', index=False)
 
-    with open('Export/' + time_str + '/activated_eids_temp.csv', 'r') as f:
-        with open('Export/' + time_str + '/activated_eids.csv', 'w') as f1:
+    with open('Export/' + time_str + '\\' + 'adjointMethod' + '/activated_eids_temp.csv', 'r') as f:
+        with open('Export/' + time_str + '\\' + 'adjointMethod' + '/activated_eids.csv', 'w') as f1:
             next(f)  # skip header line
             for line in f:
                 f1.write(line)
 
-    os.remove('Export/' + time_str + '/activated_eids_temp.csv')
+    os.remove('Export/' + time_str + '\\' + 'adjointMethod' + '/activated_eids_temp.csv')
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -142,84 +144,148 @@ def create_csv_files_from_graph(graph, p_veins, key_word_all, summary_informatio
     #                                                                                                                  #
     ####################################################################################################################
 
-    if key_word_all == 0:
+    for radius in radii:
 
-        reacting_eids = []
+        os.makedirs('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius))
+        name = 'modi_radius_' + str(radius)
 
-        for edge in range(graph.ecount()):
+        if key_word_all == 0:
 
-            if graph.es[edge]['Modifiable'] == 1:
+            for modi in key_number_modi:
 
-                if key_number_modi == 0:
+                reacting_eids = []
 
-                    if graph.es[edge]['Type'] == 0 or graph.es[edge]['Type'] == 3:
+                for edge in range(graph.ecount()):
 
-                        reacting_eids.append(edge)
+                    if graph.es[edge][name] == 1:
 
-                elif key_number_modi == 1:
+                        if modi == 0:
 
-                    if graph.es[edge]['Type'] == 1:
+                            if graph.es[edge]['Type'] == 0 or graph.es[edge]['Type'] == 3:
 
-                        reacting_eids.append(edge)
+                                reacting_eids.append(edge)
 
-                elif key_number_modi == 2:
+                        elif modi == 1:
 
-                    if graph.es[edge]['Type'] == 1 or graph.es[edge]['Type'] == 0 or graph.es[edge]['Type'] == 3:
+                            if graph.es[edge]['Type'] == 1:
 
-                        reacting_eids.append(edge)
+                                reacting_eids.append(edge)
 
-                elif key_number_modi == 3:
+                        elif modi == 2:
 
-                    reacting_eids.append(edge)
+                            if graph.es[edge]['Type'] == 1 or graph.es[edge]['Type'] == 0 or graph.es[edge]['Type'] == 3:
 
-        data_mod = {'Modifiable': reacting_eids}
-        reacting_eids_df = pd.DataFrame(data_mod)
-        reacting_eids_df_new = reacting_eids_df.T
+                                reacting_eids.append(edge)
 
-        reacting_eids_df_new.to_csv('Export/' + time_str + '/reacting_eids_temp.csv', index=False)
+                        elif modi == 3:
 
-        with open('Export/' + time_str + '/reacting_eids_temp.csv', 'r') as f:
-            with open('Export/' + time_str + '/reacting_eids.csv', 'w') as f1:
-                next(f)  # skip header line
-                for line in f:
-                    f1.write(line)
+                            reacting_eids.append(edge)
 
-        os.remove('Export/' + time_str + '/reacting_eids_temp.csv')
+                data_mod = {'Modifiable': reacting_eids}
+                reacting_eids_df = pd.DataFrame(data_mod)
+                reacting_eids_df_new = reacting_eids_df.T
 
-        with open('Export/' + time_str + '/reacting_eids.csv', newline='') as f:
-            r = csv.reader(f)
-            data = [line for line in r]
+                reacting_eids_df_new.to_csv('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/temp.csv', index=False)
 
-        with open('Export/' + time_str + '/reacting_eids.csv', 'w', newline='') as f:
-            w = csv.writer(f)
-            w.writerow(['eid_list'])
-            w.writerows(data)
+                with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/temp.csv', 'r') as f:
 
-    else:
+                    if modi == 0:
 
-        reacting_eids = [1,2,3]
+                        with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_cb_only_specified_region.csv', 'w') as f1:
+                            next(f)  # skip header line
+                            for line in f:
+                                f1.write(line)
 
-        data_mod = {'Modifiable': reacting_eids}
-        reacting_eids_df = pd.DataFrame(data_mod)
-        reacting_eids_df_new = reacting_eids_df.T
+                        with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_cb_only_specified_region.csv',
+                                  newline='') as f:
+                            r = csv.reader(f)
+                            data = [line for line in r]
 
-        reacting_eids_df_new.to_csv('Export/' + time_str + '/reacting_eids_temp.csv', index=False)
+                        with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_cb_only_specified_region.csv', 'w',
+                                  newline='') as f:
+                            w = csv.writer(f)
+                            w.writerow(['eid_list'])
+                            w.writerows(data)
 
-        with open('Export/' + time_str + '/reacting_eids_temp.csv', 'r') as f:
-            with open('Export/' + time_str + '/reacting_eids.csv', 'w') as f1:
-                next(f)  # skip header line
-                for line in f:
-                    f1.write(line)
+                    elif modi == 1:
 
-        os.remove('Export/' + time_str + '/reacting_eids_temp.csv')
+                        with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_arteries_only_specified_region.csv', 'w') as f1:
+                            next(f)  # skip header line
+                            for line in f:
+                                f1.write(line)
 
-        with open('Export/' + time_str + '/reacting_eids.csv') as f:
-            r = csv.reader(f)
-            data = [line for line in r]
+                        with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_arteries_only_specified_region.csv',
+                                  newline='') as f:
+                            r = csv.reader(f)
+                            data = [line for line in r]
 
-        with open('Export/' + time_str + '/reacting_eids.csv', 'w', encoding='utf-8') as f:
-            w = csv.writer(f)
-            w.writerow(['all'])
-            w.writerows(data)
+                        with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_arteries_only_specified_region.csv', 'w',
+                                  newline='') as f:
+                            w = csv.writer(f)
+                            w.writerow(['eid_list'])
+                            w.writerows(data)
+
+                    elif modi == 2:
+
+                        with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_arteries_cb_specified_region.csv', 'w') as f1:
+                            next(f)  # skip header line
+                            for line in f:
+                                f1.write(line)
+
+                        with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_arteries_cb_specified_region.csv',
+                                  newline='') as f:
+                            r = csv.reader(f)
+                            data = [line for line in r]
+
+                        with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_arteries_cb_specified_region.csv', 'w',
+                                  newline='') as f:
+                            w = csv.writer(f)
+                            w.writerow(['eid_list'])
+                            w.writerows(data)
+
+                    elif modi == 3:
+
+                        with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_all_specified_region.csv', 'w') as f1:
+                            next(f)  # skip header line
+                            for line in f:
+                                f1.write(line)
+
+                        with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_all_specified_region.csv', newline='') as f:
+                            r = csv.reader(f)
+                            data = [line for line in r]
+
+                        with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_all_specified_region.csv', 'w', newline='') as f:
+                            w = csv.writer(f)
+                            w.writerow(['eid_list'])
+                            w.writerows(data)
+
+                os.remove('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/temp.csv')
+
+        else:
+
+            reacting_eids = [1,2,3]
+
+            data_mod = {'Modifiable': reacting_eids}
+            reacting_eids_df = pd.DataFrame(data_mod)
+            reacting_eids_df_new = reacting_eids_df.T
+
+            reacting_eids_df_new.to_csv('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_temp.csv', index=False)
+
+            with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_temp.csv', 'r') as f:
+                with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids.csv', 'w') as f1:
+                    next(f)  # skip header line
+                    for line in f:
+                        f1.write(line)
+
+            os.remove('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids_temp.csv')
+
+            with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids.csv') as f:
+                r = csv.reader(f)
+                data = [line for line in r]
+
+            with open('Export/' + time_str + '\\' + 'adjointMethod' + '\\' + 'radius_' + str(radius) + '/reacting_eids.csv', 'w', encoding='utf-8') as f:
+                w = csv.writer(f)
+                w.writerow(['all'])
+                w.writerows(data)
 
     return
