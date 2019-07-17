@@ -27,8 +27,8 @@ def create_csv_files_from_graph(graph, p_veins, p_arteries, key_word_all, summar
     #                                                                                                                  #
     ####################################################################################################################
 
-    with open('Export/' + time_str + '/read_me.txt', 'a+') as file:
-        file.write(json.dumps(summary_information))
+    with open('Export/' + time_str + '/read_me.txt', "w") as file:
+        json.dump(summary_information, file, indent=4)
 
     ####################################################################################################################
     #                                                                                                                  #

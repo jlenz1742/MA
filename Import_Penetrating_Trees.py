@@ -103,7 +103,7 @@ def get_penetrating_tree_from_pkl_file(file_path, file_id, scaling_factor, type_
 
         neighbors_current_vertex = g.neighbors(vertex)
 
-        if len(neighbors_current_vertex) <= 2:
+        if len(neighbors_current_vertex) <= 1:
             g.vs[vertex]['CapBedConnection'] = 1
 
     # CALCULATE LENGTH OF EACH CONNECTION (SUMMATION OF SEGMENTS)
@@ -131,7 +131,6 @@ def get_penetrating_tree_from_pkl_file(file_path, file_id, scaling_factor, type_
     g.vs['Type'] = type_key_number
 
     return g
-
 
 def get_coordinates_limits_from_several_graphs(graphs):
 

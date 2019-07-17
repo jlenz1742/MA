@@ -28,7 +28,7 @@ path_vein = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\databas
 
 # Length hexagon equal to 62 microns (Diss Schmid)
 
-length_honeycomb = 125
+length_honeycomb = 100
 
 # Beta-Distribution for diameters of capillary bed (in meters)
 
@@ -39,13 +39,13 @@ diameter_max = 9 / math.pow(10, 6)
 
 # Penetrating Trees (in microns)
 
-length_x = 500
-length_y = 500
+length_x = 400
+length_y = 400
 scaling_factor = 1
 
 # Honeycomb Penetrating Trees (geometrical help only, in microns)
 
-length_hexagon_penetrating_trees = 250
+length_hexagon_penetrating_trees = 200
 
 # BC (in Pascal)
 
@@ -60,7 +60,7 @@ radius_sphere = 100
 # Modifiable Edges -> coordinates should be the same than for the activated edges
 all_edges = 0           # 1 or 0, 0: not all edges, 1: all edges
 coordinates_modifiable_sphere = coordinates_sphere
-radii_sphere_mod = [200, 300]
+radii_sphere_mod = [100, 120, 140, 160, 200]
 
 key_modifiable_edges = [0, 1, 2, 3]         # 0: Only CB, 1: Only Arteries, 2: CB and Arteries, 3: all
 
@@ -162,7 +162,7 @@ graph_main = Network_Generator.create_3d_graph(graph_main, combs_cap_bed[0], com
 print(time.strftime("%H%M%S"))
 print('Capillary bed has been created ... ')
 
-graph_main = Network_Generator.add_penetrating_tree_to_cap_bed(graph_penetrating, graph_main)
+graph_main = Network_Generator.add_penetrating_tree_to_cap_bed(graph_penetrating, graph_main, length_honeycomb)
 
 print(time.strftime("%H%M%S"))
 print('Penetrating tree has been added to the capillary bed ...')
@@ -192,5 +192,5 @@ Export_of_graph.create_csv_files_from_graph(graph_main, pressure_veins, pressure
 print(time.strftime("%H%M%S"))
 print('END')
 
-# Plot.plot_graph(graph_main)
+Plot.plot_graph(graph_main)
 

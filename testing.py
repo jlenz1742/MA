@@ -1,9 +1,11 @@
 import datetime
 import os
 import time
-print(type(datetime.datetime.now()))
+import json
 
-a = str(datetime.datetime.now())
+test = []
 
-time_str = time.strftime("%Y%m%d_%H%M%S")
-os.makedirs('test_' + time_str)
+
+while len(test) == 0:
+
+    print('yes')
