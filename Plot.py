@@ -136,7 +136,7 @@ def plot_path(graph, path):
     plt.show()
 
 
-def plot_chosen_region(graph):
+def plot_chosen_region(graph, name):
 
 
     # Graph need to have coordinates of each node as vertex attribute
@@ -162,18 +162,14 @@ def plot_chosen_region(graph):
         z.append(graph.vs[graph.es[edge].target]['z_coordinate'])
 
 
-        if graph.es[edge]['Activated'] == 1:
+        if graph.es[edge][name] == 1:
 
             ax.plot(x, y, z, color='red')
 
         else:
 
-            ax.plot(x, y, z, color='white')
+            ax.plot(x, y, z, color='grey')
 
-    for vertex in range(graph.vcount()):
-
-        if graph.vs[vertex]['attachmentVertex'] == 1:
-            ax.scatter(graph.vs[vertex]['x_coordinate'], graph.vs[vertex]['y_coordinate'], color='black')
 
     plt.xlabel('X')
     plt.ylabel('Y')

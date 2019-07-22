@@ -39,8 +39,8 @@ diameter_max = 9 / math.pow(10, 6)
 
 # Penetrating Trees (in microns)
 
-length_x = 400
-length_y = 400
+length_x = 200
+length_y = 200
 scaling_factor = 1
 
 # Honeycomb Penetrating Trees (geometrical help only, in microns)
@@ -54,15 +54,15 @@ pressure_arteries = 10600
 
 # Activated Edges ( in microns)
 
-coordinates_sphere = {'x': 200, 'y': 200, 'z': 200}
-radius_sphere = 100
+coordinates_sphere = {'x': 200, 'y': 200, 'z': 500}
+radius_sphere = 50
 
 # Modifiable Edges -> coordinates should be the same than for the activated edges
 all_edges = 0           # 1 or 0, 0: not all edges, 1: all edges
 coordinates_modifiable_sphere = coordinates_sphere
-radii_sphere_mod = [100, 120, 140, 160, 200]
+radii_sphere_mod = [150, 250]
 
-key_modifiable_edges = [0, 1, 2, 3]         # 0: Only CB, 1: Only Arteries, 2: CB and Arteries, 3: all
+key_modifiable_edges = [2]         # 0: Only CB, 1: Only Arteries, 2: CB and Arteries, 3: all
 
 # Summary for txt file
 
@@ -180,6 +180,7 @@ if all_edges == 0:
 else:
 
     None
+
 print(time.strftime("%H%M%S"))
 print('Export of the csv files and selection of the modifiable region ... ')
 
@@ -192,5 +193,9 @@ Export_of_graph.create_csv_files_from_graph(graph_main, pressure_veins, pressure
 print(time.strftime("%H%M%S"))
 print('END')
 
+print(graph_main.es[100])
+
+
+Plot.plot_chosen_region(graph_main, 'modi_radius_250')
 Plot.plot_graph(graph_main)
 

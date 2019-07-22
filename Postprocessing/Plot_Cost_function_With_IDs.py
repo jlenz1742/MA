@@ -4,16 +4,15 @@ import matplotlib.pyplot as plt
 
 # Specify Group Folder
 
-name_group_folder = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\0'
+name_group_folder = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\1_Results'
 
 # Specify single folders
 
-single_folders = {'0.3': 'Gamma = 1', '0.7': 'Gamma = 10', '0.11': 'Gamma = 15', '0.15': 'Gamma = 25',
-                  '0.19': 'Gamma = 50'}
+single_folders = {'1.0': 'Rho = 0.7', '1.11': 'Rho = 0.95', '1.16': 'Rho = 0.5'}
 
 # Name output file
 
-name_aid = 'all'
+name_aid = 'different_rho_gamma_10_radius_100'
 
 ########################################################################################################################
 #                                                                                                                      #
@@ -29,7 +28,9 @@ ax1 = fig.add_subplot(111)
 
 for folder in single_folders:
 
-    path_adj_data = name_group_folder + '\\' + folder + r'\out\adjointdata.csv'
+    path_adj_data = name_group_folder + '\\' + folder + r'\adjointdata.csv'
+
+    print(path_adj_data)
 
     df = pd.read_csv(path_adj_data)
 
