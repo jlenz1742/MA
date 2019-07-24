@@ -7,9 +7,9 @@ import matplotlib.colors as colors
 def plot_network_from_meshdata_file():
 
     df = pd.read_csv(
-        r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\1_Results\1.1\meshdata_9999.csv')
+        r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\2_Results\2.0\out\meshdata_9999.csv')
 
-    df_final = pd.read_csv(r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\1_Results\1.1\meshdata_579999.csv')
+    df_final = pd.read_csv(r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\2_Results\2.0\out\meshdata_6739999.csv')
 
     headers = list(df.columns.values)
 
@@ -89,13 +89,10 @@ def plot_network_from_meshdata_file():
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.add_collection3d(lc)
-    # ax.set_xlim(x_min, x_max)
-    # ax.set_ylim(y_min, y_max)
-    # ax.set_zlim(z_min, z_max)
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+    ax.set_zlim(z_min, z_max)
 
-    ax.set_xlim(0, 0.0004)
-    ax.set_ylim(0, 0.0004)
-    ax.set_zlim(0, 0.0004)
     plt.colorbar(lc)
     plt.show()
 

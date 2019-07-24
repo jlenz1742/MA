@@ -138,7 +138,6 @@ def plot_path(graph, path):
 
 def plot_chosen_region(graph, name):
 
-
     # Graph need to have coordinates of each node as vertex attribute
 
     mpl.rcParams['legend.fontsize'] = 10
