@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 
 # Specify Group Folder
 
-name_group_folder = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\1_Results'
+name_group_folder = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\2_Results'
 
 # Specify single folders
 
-single_folders = {'1.0': 'Rho = 0.7', '1.11': 'Rho = 0.95', '1.16': 'Rho = 0.5'}
+single_folders = {'2.0': 'Rho = 0.7', '2.1': 'Rho = 0.95', '2.2': 'Rho = 0.5'}
 
 # Name output file
 
