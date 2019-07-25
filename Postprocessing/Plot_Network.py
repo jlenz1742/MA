@@ -7,9 +7,9 @@ import matplotlib.colors as colors
 def plot_network_from_meshdata_file():
 
     df = pd.read_csv(
-        r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\2_Results\2.0\out\meshdata_9999.csv')
+        r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\4_Results\4.0\out\meshdata_9999.csv')
 
-    df_final = pd.read_csv(r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\2_Results\2.0\out\meshdata_6739999.csv')
+    df_final = pd.read_csv(r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\4_Results\4.0\out\meshdata_7019999.csv')
 
     headers = list(df.columns.values)
 

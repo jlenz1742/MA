@@ -7,15 +7,15 @@ import C_Regularization
 #                                                                                                                      #
 ########################################################################################################################
 
-folder = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\3_Results'
+folder = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\4_Results'
 
-simulation_ids = ['3.2', '3.5']
+simulation_ids = ['4.0', '4.1', '4.2', '4.3', '4.4', '4.5']
 
-gammas = []
+gammas = [50, 75, 100, 150, 200, 500]
 radii = [150, 250]
 epsilons = []
 
-codes = [1]
+codes = [0]
 
 # 0: Cost function / Regularization with different gammas
 # 1: Cost function / Regularization with different radii

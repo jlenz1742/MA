@@ -11,8 +11,8 @@ import numpy as np
 
 # Enter path of output
 
-path_target = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\2_Results\2.0\out'
-network_id = '2'
+path_target = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\4_Results\4.5\out'
+network_id = '3'
 
 ########################################################################################################################
 
