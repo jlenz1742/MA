@@ -3,7 +3,63 @@ from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 
 
-def plot_graph(graph):
+def plot_graph(graph, path):
+
+    # Graph need to have coordinates of each node as vertex attribute
+
+    mpl.rcParams['legend.fontsize'] = 10
+
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+
+    for edge in range(graph.ecount()):
+
+        x = []
+        y = []
+        z = []
+
+        x.append(graph.vs[graph.es[edge].source]['x_coordinate'])
+        x.append(graph.vs[graph.es[edge].target]['x_coordinate'])
+
+        y.append(graph.vs[graph.es[edge].source]['y_coordinate'])
+        y.append(graph.vs[graph.es[edge].target]['y_coordinate'])
+
+        z.append(graph.vs[graph.es[edge].source]['z_coordinate'])
+        z.append(graph.vs[graph.es[edge].target]['z_coordinate'])
+
+        try:
+            if graph.es[edge]['Type'] == 0:
+
+                ax.plot(x, y, z, color='lightgray')
+
+            elif graph.es[edge]['Type'] == 1:
+
+                ax.plot(x, y, z, color='blue')
+
+            elif graph.es[edge]['Type'] == 2:
+
+                ax.plot(x, y, z, color='red')
+
+            elif graph.es[edge]['Type'] == 3:
+
+                ax.plot(x, y, z, color='dimgray')
+
+        except:
+
+            ax.plot(x, y, z, color='red')
+
+    for vertex in range(graph.vcount()):
+
+        if graph.vs[vertex]['attachmentVertex'] == 1:
+            ax.scatter(graph.vs[vertex]['x_coordinate'], graph.vs[vertex]['y_coordinate'], color='black')
+
+    plt.xlabel('X')
+    plt.ylabel('Y')
+
+    plt.savefig(path)
+
+
+def plot_penetrating_tree(graph):
 
     # Graph need to have coordinates of each node as vertex attribute
 
@@ -57,6 +113,38 @@ def plot_graph(graph):
     plt.ylabel('Y')
 
     plt.show()
+
+
+def plot_graph_selection_data_base(graph, path):
+
+    # Graph need to have coordinates of each node as vertex attribute
+
+    mpl.rcParams['legend.fontsize'] = 10
+
+    fig = plt.figure()
+    ax = fig.gca(projection='3d')
+
+    for edge in range(graph.ecount()):
+
+        x = []
+        y = []
+        z = []
+
+        x.append(graph.vs[graph.es[edge].source]['x_coordinate'])
+        x.append(graph.vs[graph.es[edge].target]['x_coordinate'])
+
+        y.append(graph.vs[graph.es[edge].source]['y_coordinate'])
+        y.append(graph.vs[graph.es[edge].target]['y_coordinate'])
+
+        z.append(graph.vs[graph.es[edge].source]['z_coordinate'])
+        z.append(graph.vs[graph.es[edge].target]['z_coordinate'])
+
+        ax.plot(x, y, z, color='blue')
+
+    plt.xlabel('X')
+    plt.ylabel('Y')
+
+    plt.savefig(path)
 
 
 def plot_geometrical_help(graph):
@@ -136,7 +224,7 @@ def plot_path(graph, path):
     plt.show()
 
 
-def plot_chosen_region(graph, name):
+def plot_chosen_region(graph, name, path):
 
     # Graph need to have coordinates of each node as vertex attribute
 
@@ -160,18 +248,22 @@ def plot_chosen_region(graph, name):
         z.append(graph.vs[graph.es[edge].source]['z_coordinate'])
         z.append(graph.vs[graph.es[edge].target]['z_coordinate'])
 
+        if graph.es[edge]['Activated'] == 1:
 
-        if graph.es[edge][name] == 1:
+            ax.plot(x, y, z, color='green')
+
+        elif graph.es[edge][name] == 1:
 
             ax.plot(x, y, z, color='red')
 
         else:
 
-            ax.plot(x, y, z, color='grey')
-
+            ax.plot(x, y, z, color='lightgray')
 
     plt.xlabel('X')
     plt.ylabel('Y')
 
-    plt.show()
+    plt.savefig(path)
+
     return graph
+

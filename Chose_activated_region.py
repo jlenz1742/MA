@@ -7,41 +7,6 @@ def define_activated_region(graph, coords_sphere, r_sphere):
 
     for edge in range(graph.ecount()):
 
-        # Target or source point inside sphere -------------------------------------------------------------------------
-
-        # p1 = graph.es[edge].source
-        # x_1 = graph.vs[p1]['x_coordinate'] / math.pow(10, 6)
-        # y_1 = graph.vs[p1]['y_coordinate'] / math.pow(10, 6)
-        # z_1 = graph.vs[p1]['z_coordinate'] / math.pow(10, 6)
-        #
-        # p2 = graph.es[edge].target
-        # x_2 = graph.vs[p2]['x_coordinate'] / math.pow(10, 6)
-        # y_2 = graph.vs[p2]['y_coordinate'] / math.pow(10, 6)
-        # z_2 = graph.vs[p2]['z_coordinate'] / math.pow(10, 6)
-        #
-        # x_3 = coords_sphere['x'] / math.pow(10, 6)
-        # y_3 = coords_sphere['y'] / math.pow(10, 6)
-        # z_3 = coords_sphere['z'] / math.pow(10, 6)
-        #
-        # radius = r_sphere / math.pow(10, 6)
-        #
-        # distance_p1 = math.sqrt(math.pow(x_1 - x_3, 2) + math.pow(y_1 - y_3, 2) + math.pow(z_1 - z_3, 2))
-        # distance_p2 = math.sqrt(math.pow(x_2 - x_3, 2) + math.pow(y_2 - y_3, 2) + math.pow(z_2 - z_3, 2))
-        #
-        # if distance_p1 < radius:
-        #
-        #     activated_edge_ids.append(edge)
-        #
-        # elif distance_p2 < radius:
-        #
-        #     activated_edge_ids.append(edge)
-        #
-        # else:
-        #
-        #     continue
-
-        # Part of line segment inside sphere (or at least tangential) --------------------------------------------------
-
         p1 = graph.es[edge].source
         x_1 = graph.vs[p1]['x_coordinate'] / math.pow(10, 6)
         y_1 = graph.vs[p1]['y_coordinate'] / math.pow(10, 6)
@@ -111,7 +76,9 @@ def define_activated_region(graph, coords_sphere, r_sphere):
 
     for activated_edge in activated_edge_ids:
 
-        graph.es[activated_edge]['Activated'] = 1
+        if graph.es[activated_edge]['Type'] == 0 or graph.es[activated_edge]['Type'] == 3:
+
+            graph.es[activated_edge]['Activated'] = 1
 
     return graph
 

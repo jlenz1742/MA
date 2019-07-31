@@ -3,6 +3,7 @@ from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import pandas as pd
 import matplotlib.colors as colors
+import math
 
 def plot_network_from_meshdata_file():
 
@@ -57,11 +58,13 @@ def plot_network_from_meshdata_file():
 
     t = t_2 / t_1
     t_new = []
+    t_2_new = []
 
     for i in range(len(t)):
 
         if (i % 2) == 0:
 
+            t_2_new.append(t_2[i] / (4 / math.pow(10, 6)))
             t_new.append(t[i])
 
     t_new_array = np.asarray(t_new)
@@ -82,8 +85,12 @@ def plot_network_from_meshdata_file():
 
             segs.append(segs_temp[i])
 
+    length_segs = len(segs)
+    width = [1]* length_segs
+    print(len(width), len(t_2_new))
+
     # make the collection of segments
-    lc = Line3DCollection(segs, cmap=plt.get_cmap('coolwarm'))
+    lc = Line3DCollection(segs, linewidths=t_2_new,  cmap=plt.get_cmap('coolwarm'))
     lc.set_array(t_new_array)  # color the segments by our parameter
 
     fig = plt.figure()

@@ -2,6 +2,7 @@ import math
 import Beta_Distribution
 import Chose_activated_region
 
+
 def create_3d_graph(graph, x, y, z, l_honeycomb, coord, diameter_info):
 
     for level in range(z):
@@ -34,6 +35,8 @@ def create_plane_geometrical_help(graph, x, y, z, l_honeycomb, coord_lim):
     total_vertices = horizontal_lines * vertices_per_line
     graph.add_vertices(total_vertices)
 
+    vector_ = {'x_displacement': l_honeycomb * 0.5 , 'y_displacement': l_honeycomb * 0.2}
+
     ''' Add Edges '''
 
     start_id = graph.vcount() - total_vertices
@@ -41,8 +44,8 @@ def create_plane_geometrical_help(graph, x, y, z, l_honeycomb, coord_lim):
 
     if z == 0:
 
-        graph.vs[0]['x_coordinate'] = coord_lim['x_min']
-        graph.vs[0]['y_coordinate'] = coord_lim['y_min']
+        graph.vs[0]['x_coordinate'] = coord_lim['x_min'] + vector_['x_displacement']
+        graph.vs[0]['y_coordinate'] = coord_lim['y_min'] + vector_['y_displacement']
         graph.vs[0]['z_coordinate'] = coord_lim['z_min']
 
     else:
@@ -60,6 +63,7 @@ def create_plane_geometrical_help(graph, x, y, z, l_honeycomb, coord_lim):
             graph.vs[vertices_in_current_line[i]]['z_coordinate'] = graph.vs[0]['z_coordinate'] + z * l_honeycomb*0.5
 
             # Add Vertex Attribute -> Vein_Point = 1 -> venous penetrating tree starts here!
+
             if (line % 2) == 0:
 
                 graph.vs[vertices_in_current_line[i]]['vein_point'] = 1
@@ -67,7 +71,6 @@ def create_plane_geometrical_help(graph, x, y, z, l_honeycomb, coord_lim):
             else:
 
                 graph.vs[vertices_in_current_line[i]]['vein_point'] = 0
-
 
             if (line % 2) == 0:
 
@@ -236,8 +239,8 @@ def create_plane_geometrical_help(graph, x, y, z, l_honeycomb, coord_lim):
 
             for midpoint_vertex in range(y):
 
-                x_coordinate_midpoint = 0.5 * l_honeycomb + 1.5 * l_honeycomb * column
-                y_coordinate_midpoint = h + 2 * h * midpoint_vertex
+                x_coordinate_midpoint = 0.5 * l_honeycomb + 1.5 * l_honeycomb * column + vector_['x_displacement']
+                y_coordinate_midpoint = h + 2 * h * midpoint_vertex + vector_['y_displacement']
                 z_coordinate_midpoint = 0
 
                 graph.add_vertex(x_coordinate=x_coordinate_midpoint, y_coordinate=y_coordinate_midpoint,
@@ -247,8 +250,8 @@ def create_plane_geometrical_help(graph, x, y, z, l_honeycomb, coord_lim):
 
             for midpoint_vertex in range(y-1):
 
-                x_coordinate_midpoint = 0.5 * l_honeycomb + 1.5 * l_honeycomb * column
-                y_coordinate_midpoint = 2 * h + 2 * h * midpoint_vertex
+                x_coordinate_midpoint = 0.5 * l_honeycomb + 1.5 * l_honeycomb * column + vector_['x_displacement']
+                y_coordinate_midpoint = 2 * h + 2 * h * midpoint_vertex + vector_['y_displacement']
                 z_coordinate_midpoint = 0
 
                 graph.add_vertex(x_coordinate=x_coordinate_midpoint, y_coordinate=y_coordinate_midpoint,
@@ -264,6 +267,76 @@ def create_plane_geometrical_help(graph, x, y, z, l_honeycomb, coord_lim):
     graph.vs['CapBedConnection'] = 0
 
     return graph
+
+
+def trim_geometrical_help(graph_geometrical_help, coord_lim):
+
+    x_min = coord_lim['x_min']
+    x_max = coord_lim['x_max']
+    y_min = coord_lim['y_min']
+    y_max = coord_lim['y_max']
+
+    print(x_min, x_max, y_min, y_max)
+
+    edges_to_be_deleted = []
+
+    for edge in range(graph_geometrical_help.ecount()):
+
+        start_point = graph_geometrical_help.es[edge].source
+        end_point = graph_geometrical_help.es[edge].target
+
+        x_p_start = graph_geometrical_help.vs[start_point]['x_coordinate']
+        x_p_end = graph_geometrical_help.vs[end_point]['x_coordinate']
+
+        y_p_start = graph_geometrical_help.vs[start_point]['y_coordinate']
+        y_p_end = graph_geometrical_help.vs[end_point]['y_coordinate']
+
+        if x_p_start < x_min or x_p_start > x_max or y_p_start > y_max or y_p_start < y_min:
+
+            edges_to_be_deleted.append(edge)
+
+        elif x_p_end < x_min or x_p_end > x_max or y_p_end > y_max or y_p_end < y_min:
+
+            edges_to_be_deleted.append(edge)
+
+    edges_to_be_deleted_new = []
+
+    for i in range(len(edges_to_be_deleted)):
+
+        edge_id_new = edges_to_be_deleted[i] - i
+        edges_to_be_deleted_new.append(edge_id_new)
+
+    for edge in edges_to_be_deleted_new:
+
+        graph_geometrical_help.delete_edges([edge])
+
+    vertices_to_be_deleted = []
+
+    for vertex in range(graph_geometrical_help.vcount()):
+
+        x_vertex = graph_geometrical_help.vs[vertex]['x_coordinate']
+        y_vertex = graph_geometrical_help.vs[vertex]['y_coordinate']
+
+        if x_vertex < x_min or x_vertex > x_max or y_vertex > y_max or y_vertex < y_min:
+
+            vertices_to_be_deleted.append(vertex)
+
+        else:
+
+            continue
+
+    vertices_to_be_deleted_new = []
+
+    for i in range(len(vertices_to_be_deleted)):
+
+        vertex_id_new = vertices_to_be_deleted[i] - i
+        vertices_to_be_deleted_new.append(vertex_id_new)
+
+    for vertex in vertices_to_be_deleted_new:
+
+        graph_geometrical_help.delete_vertices([vertex])
+
+    return graph_geometrical_help
 
 
 def create_plane(graph, x, y, z, l_honeycomb, coord_lim):
@@ -600,120 +673,128 @@ def add_penetrating_tree_to_cap_bed(graph_penetrating_tree, graph_capillary_bed,
 
         if graph_penetrating_tree.vs[vertex]['CapBedConnection'] == 1:
 
-            zaehler += 1
-            list_distances = []
-            list_edges = []
+            if graph_penetrating_tree.vs[vertex]['attachmentVertex'] == 0:
 
-            x_vertex = graph_capillary_bed.vs[vertex_new]['x_coordinate']
-            y_vertex = graph_capillary_bed.vs[vertex_new]['y_coordinate']
-            z_vertex = graph_capillary_bed.vs[vertex_new]['z_coordinate']
+                zaehler += 1
+                list_distances = []
+                list_edges = []
 
-            coord_sphere = {'x': x_vertex, 'y': y_vertex, 'z': z_vertex}
+                x_vertex = graph_capillary_bed.vs[vertex_new]['x_coordinate']
+                y_vertex = graph_capillary_bed.vs[vertex_new]['y_coordinate']
+                z_vertex = graph_capillary_bed.vs[vertex_new]['z_coordinate']
 
-            possible_connections_edge_ids = []
-            _radius_ = length_honeycomb
+                coord_sphere = {'x': x_vertex, 'y': y_vertex, 'z': z_vertex}
 
-            while len(possible_connections_edge_ids) == 0:
+                possible_connections_edge_ids = []
+                _radius_ = length_honeycomb
 
-                possible_connections_edge_ids = Chose_activated_region.define_possible_connections(graph_capillary_bed,
-                                                                                               coord_sphere, _radius_)
+                while len(possible_connections_edge_ids) == 0:
 
-                _radius_ = length_honeycomb * 1.1
+                    possible_connections_edge_ids = Chose_activated_region.define_possible_connections(graph_capillary_bed,
+                                                                                                   coord_sphere, _radius_)
 
-            print('Possible connections exist.')
-            print('Length: ', len(possible_connections_edge_ids))
-            print('Zähler: ', zaehler)
+                    _radius_ = length_honeycomb * 1.1
 
-            for _edge_ in possible_connections_edge_ids:
+                print('Possible connections exist.')
+                print('Length: ', len(possible_connections_edge_ids))
+                print('Zähler: ', zaehler)
 
-                    source_vertex = graph_capillary_bed.es[_edge_].source
-                    target_vertex = graph_capillary_bed.es[_edge_].target
+                for _edge_ in possible_connections_edge_ids:
 
-                    x_source = graph_capillary_bed.vs[source_vertex]['x_coordinate']
-                    y_source = graph_capillary_bed.vs[source_vertex]['y_coordinate']
-                    z_source = graph_capillary_bed.vs[source_vertex]['z_coordinate']
-                    x_target = graph_capillary_bed.vs[target_vertex]['x_coordinate']
-                    y_target = graph_capillary_bed.vs[target_vertex]['y_coordinate']
-                    z_target = graph_capillary_bed.vs[target_vertex]['z_coordinate']
+                        source_vertex = graph_capillary_bed.es[_edge_].source
+                        target_vertex = graph_capillary_bed.es[_edge_].target
 
-                    x_mp = (x_source + x_target) / 2
-                    y_mp = (y_source + y_target) / 2
-                    z_mp = (z_source + z_target) / 2
+                        x_source = graph_capillary_bed.vs[source_vertex]['x_coordinate']
+                        y_source = graph_capillary_bed.vs[source_vertex]['y_coordinate']
+                        z_source = graph_capillary_bed.vs[source_vertex]['z_coordinate']
+                        x_target = graph_capillary_bed.vs[target_vertex]['x_coordinate']
+                        y_target = graph_capillary_bed.vs[target_vertex]['y_coordinate']
+                        z_target = graph_capillary_bed.vs[target_vertex]['z_coordinate']
 
-                    distance = math.sqrt(math.pow(x_vertex - x_mp, 2) + math.pow(y_vertex - y_mp, 2) + math.pow(z_vertex - z_mp, 2))
+                        x_mp = (x_source + x_target) / 2
+                        y_mp = (y_source + y_target) / 2
+                        z_mp = (z_source + z_target) / 2
 
-                    list_distances.append(distance)
-                    list_edges.append(_edge_)
+                        distance = math.sqrt(math.pow(x_vertex - x_mp, 2) + math.pow(y_vertex - y_mp, 2) +
+                                             math.pow(z_vertex - z_mp, 2))
 
-            # for edge in range(graph_capillary_bed.ecount()):
-            #
-            #     if graph_capillary_bed.es[edge]['Allow_Connection'] == 1:
-            #
-            #         x_vertex = graph_capillary_bed.vs[vertex_new]['x_coordinate']
-            #         y_vertex = graph_capillary_bed.vs[vertex_new]['y_coordinate']
-            #         z_vertex = graph_capillary_bed.vs[vertex_new]['z_coordinate']
-            #
-            #         # x_mp = graph_capillary_bed.es[edge]['Coord_midpoint'][0]
-            #         # y_mp = graph_capillary_bed.es[edge]['Coord_midpoint'][1]
-            #         # z_mp = graph_capillary_bed.es[edge]['Coord_midpoint'][2]
-            #
-            #         source_vertex = graph_capillary_bed.es[edge].source
-            #         target_vertex = graph_capillary_bed.es[edge].target
-            #
-            #         x_source = graph_capillary_bed.vs[source_vertex]['x_coordinate']
-            #         y_source = graph_capillary_bed.vs[source_vertex]['y_coordinate']
-            #         z_source = graph_capillary_bed.vs[source_vertex]['z_coordinate']
-            #         x_target = graph_capillary_bed.vs[target_vertex]['x_coordinate']
-            #         y_target = graph_capillary_bed.vs[target_vertex]['y_coordinate']
-            #         z_target = graph_capillary_bed.vs[target_vertex]['z_coordinate']
-            #
-            #         x_mp = (x_source + x_target) / 2
-            #         y_mp = (y_source + y_target) / 2
-            #         z_mp = (z_source + z_target) / 2
-            #
-            #         print(x_mp, y_mp, z_mp)
-            #
-            #         distance = math.sqrt(
-            #             math.pow(x_vertex - x_mp, 2) + math.pow(y_vertex - y_mp, 2) + math.pow(z_vertex - z_mp, 2))
-            #
-            #         list_distances.append(distance)
-            #         list_edges.append(edge)
-            #
-            #     else:
-            #
-            #         continue
+                        list_distances.append(distance)
+                        list_edges.append(_edge_)
 
-            start_node_first_edge = graph_capillary_bed.es[list_edges[list_distances.index(
-                min(list_distances))]].source
+                # for edge in range(graph_capillary_bed.ecount()):
+                #
+                #     if graph_capillary_bed.es[edge]['Allow_Connection'] == 1:
+                #
+                #         x_vertex = graph_capillary_bed.vs[vertex_new]['x_coordinate']
+                #         y_vertex = graph_capillary_bed.vs[vertex_new]['y_coordinate']
+                #         z_vertex = graph_capillary_bed.vs[vertex_new]['z_coordinate']
+                #
+                #         # x_mp = graph_capillary_bed.es[edge]['Coord_midpoint'][0]
+                #         # y_mp = graph_capillary_bed.es[edge]['Coord_midpoint'][1]
+                #         # z_mp = graph_capillary_bed.es[edge]['Coord_midpoint'][2]
+                #
+                #         source_vertex = graph_capillary_bed.es[edge].source
+                #         target_vertex = graph_capillary_bed.es[edge].target
+                #
+                #         x_source = graph_capillary_bed.vs[source_vertex]['x_coordinate']
+                #         y_source = graph_capillary_bed.vs[source_vertex]['y_coordinate']
+                #         z_source = graph_capillary_bed.vs[source_vertex]['z_coordinate']
+                #         x_target = graph_capillary_bed.vs[target_vertex]['x_coordinate']
+                #         y_target = graph_capillary_bed.vs[target_vertex]['y_coordinate']
+                #         z_target = graph_capillary_bed.vs[target_vertex]['z_coordinate']
+                #
+                #         x_mp = (x_source + x_target) / 2
+                #         y_mp = (y_source + y_target) / 2
+                #         z_mp = (z_source + z_target) / 2
+                #
+                #         print(x_mp, y_mp, z_mp)
+                #
+                #         distance = math.sqrt(
+                #             math.pow(x_vertex - x_mp, 2) + math.pow(y_vertex - y_mp, 2) +
+                #             math.pow(z_vertex - z_mp, 2))
+                #
+                #         list_distances.append(distance)
+                #         list_edges.append(edge)
+                #
+                #     else:
+                #
+                #         continue
 
-            edge_length_start_node = math.sqrt(math.pow(graph_capillary_bed.vs[start_node_first_edge]['x_coordinate'] -
-                                                        graph_capillary_bed.vs[vertex_new]['x_coordinate'], 2) +
-                                               math.pow(graph_capillary_bed.vs[start_node_first_edge]['y_coordinate'] -
-                                                        graph_capillary_bed.vs[vertex_new]['y_coordinate'], 2) +
-                                               math.pow(graph_capillary_bed.vs[start_node_first_edge]['z_coordinate'] -
-                                                        graph_capillary_bed.vs[vertex_new]['z_coordinate'], 2))
+                start_node_first_edge = graph_capillary_bed.es[list_edges[list_distances.index(
+                    min(list_distances))]].source
 
-            start_node_second_edge = graph_capillary_bed.es[list_edges[list_distances.index(
-                min(list_distances))]].target
+                edge_length_start_node = math.sqrt(math.pow(graph_capillary_bed.vs[start_node_first_edge]['x_coordinate'] -
+                                                            graph_capillary_bed.vs[vertex_new]['x_coordinate'], 2) +
+                                                   math.pow(graph_capillary_bed.vs[start_node_first_edge]['y_coordinate'] -
+                                                            graph_capillary_bed.vs[vertex_new]['y_coordinate'], 2) +
+                                                   math.pow(graph_capillary_bed.vs[start_node_first_edge]['z_coordinate'] -
+                                                            graph_capillary_bed.vs[vertex_new]['z_coordinate'], 2))
 
-            edge_length_end_node = math.sqrt(math.pow(graph_capillary_bed.vs[start_node_second_edge]['x_coordinate'] -
-                                                      graph_capillary_bed.vs[vertex_new]['x_coordinate'], 2) +
-                                             math.pow(graph_capillary_bed.vs[start_node_second_edge]['y_coordinate'] -
-                                                      graph_capillary_bed.vs[vertex_new]['y_coordinate'], 2) +
-                                             math.pow(graph_capillary_bed.vs[start_node_second_edge]['z_coordinate'] -
-                                                      graph_capillary_bed.vs[vertex_new]['z_coordinate'], 2))
+                start_node_second_edge = graph_capillary_bed.es[list_edges[list_distances.index(
+                    min(list_distances))]].target
 
-            graph_capillary_bed.add_edge(start_node_first_edge, vertex_new, connection_CB_Pene=1,
-                                         diameter=4 / math.pow(10, 6), edge_length=edge_length_start_node / math.pow(10,
-                                                                                                                     6),
-                                         Type=3)
+                edge_length_end_node = math.sqrt(math.pow(graph_capillary_bed.vs[start_node_second_edge]['x_coordinate'] -
+                                                          graph_capillary_bed.vs[vertex_new]['x_coordinate'], 2) +
+                                                 math.pow(graph_capillary_bed.vs[start_node_second_edge]['y_coordinate'] -
+                                                          graph_capillary_bed.vs[vertex_new]['y_coordinate'], 2) +
+                                                 math.pow(graph_capillary_bed.vs[start_node_second_edge]['z_coordinate'] -
+                                                          graph_capillary_bed.vs[vertex_new]['z_coordinate'], 2))
 
-            graph_capillary_bed.add_edge(start_node_second_edge, vertex_new, connection_CB_Pene=1,
-                                         diameter=4 / math.pow(10, 6), edge_length=edge_length_end_node / math.pow(10,
-                                                                                                                   6),
-                                         Type=3)
+                graph_capillary_bed.add_edge(start_node_first_edge, vertex_new, connection_CB_Pene=1,
+                                             diameter=4 / math.pow(10, 6), edge_length=edge_length_start_node / math.pow(10,
+                                                                                                                         6),
+                                             Type=3)
 
-            graph_capillary_bed.delete_edges(list_edges[list_distances.index(min(list_distances))])
+                graph_capillary_bed.add_edge(start_node_second_edge, vertex_new, connection_CB_Pene=1,
+                                             diameter=4 / math.pow(10, 6), edge_length=edge_length_end_node / math.pow(10,
+                                                                                                                       6),
+                                             Type=3)
+
+                graph_capillary_bed.delete_edges(list_edges[list_distances.index(min(list_distances))])
+
+            else:
+
+                continue
 
         else:
 

@@ -11,8 +11,8 @@ import numpy as np
 
 # Enter path of output
 
-path_target = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\4_Results\4.5\out'
-network_id = '3'
+path_target = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\6_Results\6.1\out'
+network_id = '4'
 
 ########################################################################################################################
 
@@ -36,11 +36,16 @@ for file in glob.glob("meshdata*"):
 mesh_data_files = remove_values_from_list(mesh_data_files, mesh_data_file_start)
 
 mesh_data_file_final = mesh_data_files[0]
+print(mesh_data_file_final)
 
 # Load CSV Files
 
 df_start = pd.read_csv(path_target + "\\" + mesh_data_file_start)
 df_final = pd.read_csv(path_target + "\\" + mesh_data_file_final)
+
+#print(df_final.head())
+#df_final = df_final.drop([1])
+#print(df_final.head())
 
 # # Find reacting IDs
 #
@@ -89,6 +94,7 @@ plasma_flow_change_final = np.asarray(plasma_flow_change_updated)
 
 print('\n Relative flow change of the activated Vessels:\n ')
 
+print(activated_eids_updated)
 print(plasma_flow_change_final[activated_eids_updated])
 
 

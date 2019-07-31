@@ -4,6 +4,7 @@ import os
 import csv
 import time
 import json
+import Plot
 
 
 def create_csv_files_from_graph(graph, p_veins, p_arteries, key_word_all, summary_information, key_number_modi, radii):
@@ -287,5 +288,27 @@ def create_csv_files_from_graph(graph, p_veins, p_arteries, key_word_all, summar
                 w = csv.writer(f)
                 w.writerow(['all'])
                 w.writerows(data)
+
+    ####################################################################################################################
+    #                                                                                                                  #
+    #                                                     Plots.csv                                                    #
+    #                                                                                                                  #
+    ####################################################################################################################
+
+    # Modifiable
+
+    if key_word_all == 0:
+
+        for r in radii:
+            a = 'modi_radius_' + str(r)
+            Plot.plot_chosen_region(graph, a, 'Export/' + time_str + '\\' + a + '.png')
+
+    # Activated
+
+    Plot.plot_chosen_region(graph, 'Activated', 'Export/' + time_str + '\\' + 'activated_region' + '.png')
+
+    # Total
+
+    Plot.plot_graph(graph, 'Export/' + time_str + '\\' + 'graph_total.png')
 
     return

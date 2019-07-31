@@ -3,7 +3,8 @@ import pickle
 import igraph
 import math
 import random
-
+import glob
+import os
 
 def random_choice_of_trees(number_of_penetrating_vein_trees, number_of_penetrating_artery_trees):
 
@@ -39,11 +40,20 @@ def random_choice_of_arterial_tree():
 
     # Number of available files
 
-    number_files = 58
+    path = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\database_penetrating_trees\00_Plots' \
+           r'\arterial\Acceptable_Arterial_Trees'
 
-    artery_trees_files = list(range(number_files))
+    a = os.listdir(path)
+    acceptable_arterial_trees = []
 
-    random_arterial_tree = random.choice(artery_trees_files)
+    for i in a:
+
+        x = i[:-4]
+        acceptable_arterial_trees.append(int(x))
+
+    acceptable_arterial_trees.sort()
+
+    random_arterial_tree = random.choice(acceptable_arterial_trees)
 
     return random_arterial_tree
 
@@ -52,11 +62,19 @@ def random_choice_of_venous_tree():
 
     # Number of available files
 
-    number_files = 103
+    path = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\database_penetrating_trees' \
+           r'\00_Plots\venous\Acceptable_Venous_Trees'
 
-    veins_trees_files = list(range(number_files))
+    a = os.listdir(path)
+    acceptable_venous_trees = []
 
-    random_venous_tree = random.choice(veins_trees_files)
+    for i in a:
+        x = i[:-4]
+        acceptable_venous_trees.append(int(x))
+
+    acceptable_venous_trees.sort()
+
+    random_venous_tree = random.choice(acceptable_venous_trees)
 
     return random_venous_tree
 
@@ -131,6 +149,7 @@ def get_penetrating_tree_from_pkl_file(file_path, file_id, scaling_factor, type_
     g.vs['Type'] = type_key_number
 
     return g
+
 
 def get_coordinates_limits_from_several_graphs(graphs):
 

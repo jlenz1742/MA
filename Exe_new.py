@@ -3,6 +3,7 @@ import Network_Generator
 import Plot
 import math
 import Import_Penetrating_Trees
+import Trim_Penetrating_Tree
 import Export_of_graph
 import Chose_activated_region
 import time
@@ -18,12 +19,9 @@ import time
 path_artery = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\database_penetrating_trees\arteryDB'
 path_vein = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\database_penetrating_trees\veinDB'
 
-# number_of_penetrating_vein_trees = 1
-# number_of_penetrating_artery_trees = 1
-
 # Length hexagon equal to 62 microns (Diss Schmid)
 
-length_honeycomb = 100
+length_honeycomb = 62
 
 # Beta-Distribution for diameters of capillary bed (in meters)
 
@@ -36,28 +34,29 @@ diameter_max = 9 / math.pow(10, 6)
 
 length_x = 200
 length_y = 200
+trim_factor_penetrating_tree = 0.3     # Auf beiden seiten kommt lenght_x * trimfactor dazu (gleich für y)
 scaling_factor = 1
 
 # Honeycomb Penetrating Trees (geometrical help only, in microns)
 
-length_hexagon_penetrating_trees = 200
+length_hexagon_penetrating_trees = 84
 
 # BC (in Pascal)
 
 pressure_veins = 1333.22
-pressure_arteries = 10600
+pressure_arteries = 4000
 
 # Activated Edges ( in microns)
 
-coordinates_sphere = {'x': 200, 'y': 200, 'z': 500}
-radius_sphere = 50
+coordinates_sphere = {'x': 0, 'y': 100, 'z': 300}
+radius_sphere = 60
 
 # Modifiable Edges -> coordinates should be the same than for the activated edges
-all_edges = 0           # 1 or 0, 0: not all edges, 1: all edges
+all_edges = 1           # 1 or 0, 0: not all edges, 1: all edges
 coordinates_modifiable_sphere = coordinates_sphere
-radii_sphere_mod = [150, 250]
+radii_sphere_mod = [100]
 
-key_modifiable_edges = [2]         # 0: Only CB, 1: Only Arteries, 2: CB and Arteries, 3: all
+key_modifiable_edges = [3]         # 0: Only CB, 1: Only Arteries, 2: CB and Arteries, 3: all
 
 # Summary for txt file
 
@@ -92,11 +91,11 @@ coordinates_limits['z_min'] = 0
 coordinates_limits['z_max'] = 0
 
 combs = Import_Penetrating_Trees.get_number_of_combs(coordinates_limits, length_hexagon_penetrating_trees)
-
 graph_geometrical_help = Network_Generator.create_plane_geometrical_help(graph_geometrical_help, combs[0], combs[1], 0,
                                                                          length_hexagon_penetrating_trees,
                                                                          coordinates_limits)
-# Plot.plot_geometrical_help(graph_geometrical_help)
+graph_geometrical_help_trimmed = Network_Generator.trim_geometrical_help(graph_geometrical_help, coordinates_limits)
+Plot.plot_geometrical_help(graph_geometrical_help)
 
 # Create Penetrating Tree Graph (Connected)
 
@@ -138,7 +137,13 @@ for root in range(graph_geometrical_help.vcount()):
 
         graph_penetrating = Network_Generator.add_penetrating_tree_to_tot(arterial_tree, graph_penetrating, start_point)
 
-# Plot.plot_graph(graph_penetrating)
+
+Plot.plot_penetrating_tree(graph_penetrating)
+
+Trim_Penetrating_Tree.edit_penetrating_tree(graph_penetrating, length_x, length_y, trim_factor_penetrating_tree)
+
+Plot.plot_penetrating_tree(graph_penetrating)
+
 print(time.strftime("%H%M%S"))
 print('Penetrating Trees are merged ... ')
 
@@ -158,6 +163,7 @@ print(time.strftime("%H%M%S"))
 print('Capillary bed has been created ... ')
 
 graph_main = Network_Generator.add_penetrating_tree_to_cap_bed(graph_penetrating, graph_main, length_honeycomb)
+graph_main = Trim_Penetrating_Tree.delete_unconnected_trees(graph_main)
 
 print(time.strftime("%H%M%S"))
 print('Penetrating tree has been added to the capillary bed ...')
@@ -181,16 +187,13 @@ print('Export of the csv files and selection of the modifiable region ... ')
 
 summary_dict['number_of_edges'] = graph_main.ecount()
 summary_dict['number_of_vertices'] = graph_main.vcount()
-
+Plot.plot_penetrating_tree(graph_main)
 Export_of_graph.create_csv_files_from_graph(graph_main, pressure_veins, pressure_arteries, all_edges, summary_dict,
                                             key_modifiable_edges, radii_sphere_mod)
 
 print(time.strftime("%H%M%S"))
 print('END')
 
-print(graph_main.es[100])
 
 
-Plot.plot_chosen_region(graph_main, 'modi_radius_250')
-Plot.plot_graph(graph_main)
 
