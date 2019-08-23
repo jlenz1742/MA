@@ -5,13 +5,11 @@ import json
 import pandas as pd
 import glob
 import re
+import numpy as np
 
-test =[1,0,0,0,0,0,1]
+a = np.array([1, 0, 1, 1, 1, 1, 1, 1, 1, 0])
+b = np.array([1, 9])
 
-indices = [i for i in range(len(test)) if test[i] == 1]
+c = np.delete(a, b)
 
-print(indices)
-
-a = [[1,0],[],[3, 0],[5]]
-
-print(a[-1][0])
+print(c)

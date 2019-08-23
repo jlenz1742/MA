@@ -16,184 +16,204 @@ import time
 
 # Arteries and Veins
 
-path_artery = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\database_penetrating_trees\arteryDB'
-path_vein = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\database_penetrating_trees\veinDB'
 
-# Length hexagon equal to 62 microns (Diss Schmid)
+def generate_network():
 
-length_honeycomb = 62
+    path_artery = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\database_penetrating_trees\arteryDB'
+    path_vein = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\database_penetrating_trees\veinDB'
 
-# Beta-Distribution for diameters of capillary bed (in meters)
+    # Length hexagon equal to 62 microns (Diss Schmid)
 
-diameter_standard_deviation = 1 / math.pow(10, 6)
-diameter_mean = 4 / math.pow(10, 6)
-diameter_min = 2.5 / math.pow(10, 6)
-diameter_max = 9 / math.pow(10, 6)
+    length_honeycomb = 62
 
-# Penetrating Trees (in microns)
+    # Beta-Distribution for diameters of capillary bed (in meters)
 
-length_x = 200
-length_y = 200
-trim_factor_penetrating_tree = 0.3     # Auf beiden seiten kommt lenght_x * trimfactor dazu (gleich für y)
-scaling_factor = 1
+    diameter_standard_deviation = 1 / math.pow(10, 6)
+    diameter_mean = 4 / math.pow(10, 6)
+    diameter_min = 2.5 / math.pow(10, 6)
+    diameter_max = 9 / math.pow(10, 6)
 
-# Honeycomb Penetrating Trees (geometrical help only, in microns)
+    # Penetrating Trees (in microns)
 
-length_hexagon_penetrating_trees = 84
+    length_x = 1500
+    length_y = 1500
+    trim_factor_penetrating_tree = 0.1     # Auf beiden seiten kommt lenght_x * trimfactor dazu (gleich für y)
+    scaling_factor = 0.66
 
-# BC (in Pascal)
+    # Honeycomb Penetrating Trees (geometrical he   lp only, in microns)
 
-pressure_veins = 1333.22
-pressure_arteries = 4000
+    length_hexagon_penetrating_trees = 84
 
-# Activated Edges ( in microns)
+    # BC (in Pascal)
 
-coordinates_sphere = {'x': 0, 'y': 100, 'z': 300}
-radius_sphere = 60
+    pressure_veins = 1333.22
+    pressure_arteries = 4000
 
-# Modifiable Edges -> coordinates should be the same than for the activated edges
-all_edges = 1           # 1 or 0, 0: not all edges, 1: all edges
-coordinates_modifiable_sphere = coordinates_sphere
-radii_sphere_mod = [100]
+    # Activated Edges ( in microns)
 
-key_modifiable_edges = [3]         # 0: Only CB, 1: Only Arteries, 2: CB and Arteries, 3: all
+    coordinates_sphere = {'x': 300, 'y': 300, 'z': 500}
+    radius_sphere = 100
 
-# Summary for txt file
+    # Modifiable Edges -> coordinates should be the same than for the activated edges
+    all_edges = 1           # 1 or 0, 0: not all edges, 1: all edges
+    coordinates_modifiable_sphere = coordinates_sphere
+    radii_sphere_mod = [100]
 
-summary_dict = {'L_Honeycomb_CB': length_honeycomb, 'd_std': diameter_standard_deviation, 'd_mean': diameter_mean,
-                'd_min': diameter_min, 'd_max': diameter_max, 'L_x_total': length_x, 'L_y_total': length_y,
-                'L_Honeycomb_Help': length_hexagon_penetrating_trees, 'Coordinates_Sphere': coordinates_sphere,
-                'radius_sphere_activated': radius_sphere, 'Coordinates_modifiable_sphere': coordinates_sphere,
-                'radius_sphere_modifiable': radii_sphere_mod, 'All Edges': all_edges,
-                'Modifiable_Edges_Key': key_modifiable_edges, 'pressure_veins': pressure_veins,
-                'pressure_arteries': pressure_arteries}
+    key_modifiable_edges = [3]         # 0: Only CB, 1: Only Arteries, 2: CB and Arteries, 3: all
 
-########################################################################################################################
-#                                                                                                                      #
-#                                                      EXE                                                             #
-#                                                                                                                      #
-########################################################################################################################
+    # Summary for txt file
 
-# Main Graph
+    summary_dict = {'L_Honeycomb_CB': length_honeycomb, 'd_std': diameter_standard_deviation, 'd_mean': diameter_mean,
+                    'd_min': diameter_min, 'd_max': diameter_max, 'L_x_total': length_x, 'L_y_total': length_y,
+                    'L_Honeycomb_Help': length_hexagon_penetrating_trees, 'Coordinates_Sphere': coordinates_sphere,
+                    'radius_sphere_activated': radius_sphere, 'Coordinates_modifiable_sphere': coordinates_sphere,
+                    'radius_sphere_modifiable': radii_sphere_mod, 'All Edges': all_edges,
+                    'Modifiable_Edges_Key': key_modifiable_edges, 'pressure_veins': pressure_veins,
+                    'pressure_arteries': pressure_arteries}
 
-graph_main = ig.Graph()
+    ########################################################################################################################
+    #                                                                                                                      #
+    #                                                      EXE                                                             #
+    #                                                                                                                      #
+    ########################################################################################################################
 
-# Create geometrical help (graph)
+    # Main Graph
 
-graph_geometrical_help = ig.Graph()
+    graph_main = ig.Graph()
 
-coordinates_limits = dict()
-coordinates_limits['x_min'] = 0
-coordinates_limits['x_max'] = length_x
-coordinates_limits['y_min'] = 0
-coordinates_limits['y_max'] = length_y
-coordinates_limits['z_min'] = 0
-coordinates_limits['z_max'] = 0
+    # Create geometrical help (graph)
 
-combs = Import_Penetrating_Trees.get_number_of_combs(coordinates_limits, length_hexagon_penetrating_trees)
-graph_geometrical_help = Network_Generator.create_plane_geometrical_help(graph_geometrical_help, combs[0], combs[1], 0,
-                                                                         length_hexagon_penetrating_trees,
-                                                                         coordinates_limits)
-graph_geometrical_help_trimmed = Network_Generator.trim_geometrical_help(graph_geometrical_help, coordinates_limits)
-Plot.plot_geometrical_help(graph_geometrical_help)
+    graph_geometrical_help = ig.Graph()
 
-# Create Penetrating Tree Graph (Connected)
+    coordinates_limits = dict()
+    coordinates_limits['x_min'] = 0
+    coordinates_limits['x_max'] = length_x
+    coordinates_limits['y_min'] = 0
+    coordinates_limits['y_max'] = length_y
+    coordinates_limits['z_min'] = 0
+    coordinates_limits['z_max'] = 0
 
-graph_penetrating = ig.Graph()
+    combs = Import_Penetrating_Trees.get_number_of_combs(coordinates_limits, length_hexagon_penetrating_trees)
+    graph_geometrical_help = Network_Generator.create_plane_geometrical_help(graph_geometrical_help, combs[0], combs[1], 0,
+                                                                             length_hexagon_penetrating_trees,
+                                                                             coordinates_limits)
+    graph_geometrical_help_trimmed = Network_Generator.trim_geometrical_help(graph_geometrical_help, coordinates_limits)
+    # Plot.plot_geometrical_help(graph_geometrical_help)
 
-for root in range(graph_geometrical_help.vcount()):
+    # Create Penetrating Tree Graph (Connected)
 
-    if graph_geometrical_help.vs[root]['vein_point']:
+    graph_penetrating = ig.Graph()
 
-        key_number_vein = 1
+    for root in range(graph_geometrical_help.vcount()):
 
-        x_coordinate_root = graph_geometrical_help.vs[root]['x_coordinate']
-        y_coordinate_root = graph_geometrical_help.vs[root]['y_coordinate']
-        z_coordinate_root = graph_geometrical_help.vs[root]['z_coordinate']
+        if graph_geometrical_help.vs[root]['vein_point']:
 
-        start_point = (x_coordinate_root, y_coordinate_root, z_coordinate_root)
+            key_number_vein = 1
 
-        id_vein = Import_Penetrating_Trees.random_choice_of_venous_tree()
+            x_coordinate_root = graph_geometrical_help.vs[root]['x_coordinate']
+            y_coordinate_root = graph_geometrical_help.vs[root]['y_coordinate']
+            z_coordinate_root = graph_geometrical_help.vs[root]['z_coordinate']
 
-        venous_tree = Import_Penetrating_Trees.get_penetrating_tree_from_pkl_file(path_vein, id_vein, scaling_factor,
-                                                                                  key_number_vein)
+            start_point = (x_coordinate_root, y_coordinate_root, z_coordinate_root)
 
-        graph_penetrating = Network_Generator.add_penetrating_tree_to_tot(venous_tree, graph_penetrating, start_point)
+            id_vein = Import_Penetrating_Trees.random_choice_of_venous_tree()
 
-    elif graph_geometrical_help.vs[root]['artery_point']:
+            venous_tree = Import_Penetrating_Trees.get_penetrating_tree_from_pkl_file(path_vein, id_vein, scaling_factor,
+                                                                                      key_number_vein)
 
-        key_number_artery = 2
+            graph_penetrating = Network_Generator.add_penetrating_tree_to_tot(venous_tree, graph_penetrating, start_point)
 
-        x_coordinate_root = graph_geometrical_help.vs[root]['x_coordinate']
-        y_coordinate_root = graph_geometrical_help.vs[root]['y_coordinate']
-        z_coordinate_root = graph_geometrical_help.vs[root]['z_coordinate']
+        elif graph_geometrical_help.vs[root]['artery_point']:
 
-        start_point = (x_coordinate_root, y_coordinate_root, z_coordinate_root)
+            key_number_artery = 2
 
-        id_arterial = Import_Penetrating_Trees.random_choice_of_arterial_tree()
+            x_coordinate_root = graph_geometrical_help.vs[root]['x_coordinate']
+            y_coordinate_root = graph_geometrical_help.vs[root]['y_coordinate']
+            z_coordinate_root = graph_geometrical_help.vs[root]['z_coordinate']
 
-        arterial_tree = Import_Penetrating_Trees.get_penetrating_tree_from_pkl_file(path_artery, id_arterial,
-                                                                                    scaling_factor, key_number_artery)
+            start_point = (x_coordinate_root, y_coordinate_root, z_coordinate_root)
 
-        graph_penetrating = Network_Generator.add_penetrating_tree_to_tot(arterial_tree, graph_penetrating, start_point)
+            id_arterial = Import_Penetrating_Trees.random_choice_of_arterial_tree()
 
+            arterial_tree = Import_Penetrating_Trees.get_penetrating_tree_from_pkl_file(path_artery, id_arterial,
+                                                                                        scaling_factor, key_number_artery)
 
-Plot.plot_penetrating_tree(graph_penetrating)
+            graph_penetrating = Network_Generator.add_penetrating_tree_to_tot(arterial_tree, graph_penetrating, start_point)
 
-Trim_Penetrating_Tree.edit_penetrating_tree(graph_penetrating, length_x, length_y, trim_factor_penetrating_tree)
+    # Plot.plot_penetrating_tree(graph_penetrating)
 
-Plot.plot_penetrating_tree(graph_penetrating)
+    graph_penetrating = Trim_Penetrating_Tree.edit_penetrating_tree(graph_penetrating, length_x, length_y,
+                                                                    trim_factor_penetrating_tree)
 
-print(time.strftime("%H%M%S"))
-print('Penetrating Trees are merged ... ')
+    # Plot.plot_penetrating_tree(graph_penetrating)
 
-coord_lim_cap_bed = Import_Penetrating_Trees.coordinates_limits(graph_penetrating)
-combs_cap_bed = Import_Penetrating_Trees.get_number_of_combs(coord_lim_cap_bed, length_honeycomb)
+    graph_penetrating = Trim_Penetrating_Tree.delete_unconnected_parts(graph_penetrating)
 
-diameter_dist_information = {'mean': diameter_mean, 'std': diameter_standard_deviation, 'min': diameter_min,
-                             'max': diameter_max}
+    # Plot.plot_penetrating_tree(graph_penetrating)
 
-print(time.strftime("%H%M%S"))
-print('Start to create capillary bed ... ')
+    print(time.strftime("%H%M%S"))
+    print('Penetrating Trees are merged ... ')
 
-graph_main = Network_Generator.create_3d_graph(graph_main, combs_cap_bed[0], combs_cap_bed[1], combs_cap_bed[2],
-                                               length_honeycomb, coord_lim_cap_bed, diameter_dist_information)
+    coord_lim_cap_bed = Import_Penetrating_Trees.coordinates_limits(graph_penetrating)
+    combs_cap_bed = Import_Penetrating_Trees.get_number_of_combs(coord_lim_cap_bed, length_honeycomb)
 
-print(time.strftime("%H%M%S"))
-print('Capillary bed has been created ... ')
+    diameter_dist_information = {'mean': diameter_mean, 'std': diameter_standard_deviation, 'min': diameter_min,
+                                 'max': diameter_max}
 
-graph_main = Network_Generator.add_penetrating_tree_to_cap_bed(graph_penetrating, graph_main, length_honeycomb)
-graph_main = Trim_Penetrating_Tree.delete_unconnected_trees(graph_main)
+    print(time.strftime("%H%M%S"))
+    print('Start to create capillary bed ... ')
 
-print(time.strftime("%H%M%S"))
-print('Penetrating tree has been added to the capillary bed ...')
+    graph_main = Network_Generator.create_3d_graph(graph_main, combs_cap_bed[0], combs_cap_bed[1], combs_cap_bed[2],
+                                                   length_honeycomb, coord_lim_cap_bed, diameter_dist_information)
 
-print('Select activation region ... ')
+    print(time.strftime("%H%M%S"))
+    print('Capillary bed has been created ... ')
 
-graph_main = Chose_activated_region.define_activated_region(graph_main, coordinates_sphere, radius_sphere)
+    graph_main = Network_Generator.add_penetrating_tree_to_cap_bed(graph_penetrating, graph_main, length_honeycomb)
 
-if all_edges == 0:
+    print(time.strftime("%H%M%S"))
+    print('Penetrating tree has been added to the capillary bed ...')
 
-    for radius in radii_sphere_mod:
+    print('Select activation region ... ')
 
-        graph_main = Chose_activated_region.modifiable_region(graph_main, coordinates_modifiable_sphere, radius)
+    graph_main = Chose_activated_region.define_activated_region(graph_main, coordinates_sphere, radius_sphere)
 
-else:
+    if all_edges == 0:
 
-    None
+        for radius in radii_sphere_mod:
 
-print(time.strftime("%H%M%S"))
-print('Export of the csv files and selection of the modifiable region ... ')
+            graph_main = Chose_activated_region.modifiable_region(graph_main, coordinates_modifiable_sphere, radius)
 
-summary_dict['number_of_edges'] = graph_main.ecount()
-summary_dict['number_of_vertices'] = graph_main.vcount()
-Plot.plot_penetrating_tree(graph_main)
-Export_of_graph.create_csv_files_from_graph(graph_main, pressure_veins, pressure_arteries, all_edges, summary_dict,
-                                            key_modifiable_edges, radii_sphere_mod)
+    else:
 
-print(time.strftime("%H%M%S"))
-print('END')
+        None
 
+    print(time.strftime("%H%M%S"))
+    print('Export of the csv files and selection of the modifiable region ... ')
 
+    summary_dict['number_of_edges'] = graph_main.ecount()
+    summary_dict['number_of_vertices'] = graph_main.vcount()
+    # Plot.plot_penetrating_tree(graph_main)
 
+    for v in range(graph_main.vcount()):
+
+        neibhors = graph_main.neighbors(v)
+
+        if len(neibhors) <= 1:
+
+            print(v)
+            print(neibhors)
+
+    Export_of_graph.create_csv_files_from_graph(graph_main, pressure_veins, pressure_arteries, all_edges, summary_dict,
+                                                key_modifiable_edges, radii_sphere_mod)
+
+    print(time.strftime("%H%M%S"))
+    print('END')
+
+
+i = 2
+
+for j in range(i):
+
+    generate_network()
 

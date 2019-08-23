@@ -6,6 +6,7 @@ import random
 import glob
 import os
 
+
 def random_choice_of_trees(number_of_penetrating_vein_trees, number_of_penetrating_artery_trees):
 
     # Number of available files
@@ -86,7 +87,6 @@ def get_penetrating_tree_from_pkl_file(file_path, file_id, scaling_factor, type_
     path_ = file_path
     file_name_edges = '\\' + str(file_id) + '_edgesDict.pkl'
     file_name_vertices = '\\' + str(file_id) + '_verticesDict.pkl'
-
 
     with open(path_ + file_name_edges, 'rb') as f:
 

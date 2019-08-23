@@ -693,7 +693,7 @@ def add_penetrating_tree_to_cap_bed(graph_penetrating_tree, graph_capillary_bed,
                     possible_connections_edge_ids = Chose_activated_region.define_possible_connections(graph_capillary_bed,
                                                                                                    coord_sphere, _radius_)
 
-                    _radius_ = length_honeycomb * 1.1
+                    _radius_ = length_honeycomb * 1.5
 
                 print('Possible connections exist.')
                 print('Length: ', len(possible_connections_edge_ids))
@@ -720,45 +720,6 @@ def add_penetrating_tree_to_cap_bed(graph_penetrating_tree, graph_capillary_bed,
 
                         list_distances.append(distance)
                         list_edges.append(_edge_)
-
-                # for edge in range(graph_capillary_bed.ecount()):
-                #
-                #     if graph_capillary_bed.es[edge]['Allow_Connection'] == 1:
-                #
-                #         x_vertex = graph_capillary_bed.vs[vertex_new]['x_coordinate']
-                #         y_vertex = graph_capillary_bed.vs[vertex_new]['y_coordinate']
-                #         z_vertex = graph_capillary_bed.vs[vertex_new]['z_coordinate']
-                #
-                #         # x_mp = graph_capillary_bed.es[edge]['Coord_midpoint'][0]
-                #         # y_mp = graph_capillary_bed.es[edge]['Coord_midpoint'][1]
-                #         # z_mp = graph_capillary_bed.es[edge]['Coord_midpoint'][2]
-                #
-                #         source_vertex = graph_capillary_bed.es[edge].source
-                #         target_vertex = graph_capillary_bed.es[edge].target
-                #
-                #         x_source = graph_capillary_bed.vs[source_vertex]['x_coordinate']
-                #         y_source = graph_capillary_bed.vs[source_vertex]['y_coordinate']
-                #         z_source = graph_capillary_bed.vs[source_vertex]['z_coordinate']
-                #         x_target = graph_capillary_bed.vs[target_vertex]['x_coordinate']
-                #         y_target = graph_capillary_bed.vs[target_vertex]['y_coordinate']
-                #         z_target = graph_capillary_bed.vs[target_vertex]['z_coordinate']
-                #
-                #         x_mp = (x_source + x_target) / 2
-                #         y_mp = (y_source + y_target) / 2
-                #         z_mp = (z_source + z_target) / 2
-                #
-                #         print(x_mp, y_mp, z_mp)
-                #
-                #         distance = math.sqrt(
-                #             math.pow(x_vertex - x_mp, 2) + math.pow(y_vertex - y_mp, 2) +
-                #             math.pow(z_vertex - z_mp, 2))
-                #
-                #         list_distances.append(distance)
-                #         list_edges.append(edge)
-                #
-                #     else:
-                #
-                #         continue
 
                 start_node_first_edge = graph_capillary_bed.es[list_edges[list_distances.index(
                     min(list_distances))]].source

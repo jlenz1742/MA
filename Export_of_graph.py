@@ -28,6 +28,60 @@ def create_csv_files_from_graph(graph, p_veins, p_arteries, key_word_all, summar
     #                                                                                                                  #
     ####################################################################################################################
 
+    count_arterial_vessels = 0
+    count_venous_vessels = 0
+    count_capillary_bed_honeycomb = 0
+    count_capillary_bed_connections = 0
+
+    tot_volume_arterial_vessels = 0
+    tot_volume_venous_vessels = 0
+    tot_volume_capillary_bed_honeycomb = 0
+    tot_volume_capillary_bed_connections = 0
+
+    for edge in range(graph.ecount()):
+
+        if graph.es[edge]['Type'] == 0:
+
+            count_capillary_bed_honeycomb += 1
+            len_edge = graph.es[edge]['edge_length']
+            radius = graph.es[edge]['diameter'] / 2
+
+            tot_volume_capillary_bed_honeycomb += math.pi * math.pow(radius, 2) * len_edge
+
+        elif graph.es[edge]['Type'] == 2:
+
+            count_arterial_vessels += 1
+            len_edge = graph.es[edge]['edge_length']
+            radius = graph.es[edge]['diameter'] / 2
+
+            tot_volume_arterial_vessels += math.pi * math.pow(radius, 2) * len_edge
+
+        elif graph.es[edge]['Type'] == 1:
+
+            count_venous_vessels += 1
+            len_edge = graph.es[edge]['edge_length']
+            radius = graph.es[edge]['diameter'] / 2
+
+            tot_volume_venous_vessels += math.pi * math.pow(radius, 2) * len_edge
+
+        elif graph.es[edge]['Type'] == 3:
+
+            count_capillary_bed_connections += 1
+            len_edge = graph.es[edge]['edge_length']
+            radius = graph.es[edge]['diameter'] / 2
+
+            tot_volume_capillary_bed_connections += math.pi * math.pow(radius, 2) * len_edge
+
+    summary_information['# arterial vessel'] = count_arterial_vessels
+    summary_information['# venous vessel'] = count_venous_vessels
+    summary_information['# Capillary Bed vessels'] = count_capillary_bed_honeycomb
+    summary_information['# Connection vessels'] = count_capillary_bed_connections
+
+    summary_information['# Volume arterial vessel'] = tot_volume_arterial_vessels
+    summary_information['# Volume venous vessel'] = tot_volume_venous_vessels
+    summary_information['# Volume Capillary Bed vessels'] = tot_volume_capillary_bed_honeycomb
+    summary_information['# Volume Connection vessels'] = tot_volume_capillary_bed_connections
+
     with open('Export/' + time_str + '/read_me.txt', "w") as file:
         json.dump(summary_information, file, indent=4)
 
@@ -264,7 +318,7 @@ def create_csv_files_from_graph(graph, p_veins, p_arteries, key_word_all, summar
 
         else:
 
-            reacting_eids = [1,2,3]
+            reacting_eids = [1, 2, 3]
 
             data_mod = {'Modifiable': reacting_eids}
             reacting_eids_df = pd.DataFrame(data_mod)
@@ -309,6 +363,10 @@ def create_csv_files_from_graph(graph, p_veins, p_arteries, key_word_all, summar
 
     # Total
 
+
+    # Create Pickle File
+
+    graph.write_pickle('Export/' + time_str + '\\' + 'graph.pkl')
     Plot.plot_graph(graph, 'Export/' + time_str + '\\' + 'graph_total.png')
 
     return
