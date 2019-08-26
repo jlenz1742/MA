@@ -211,7 +211,7 @@ def generate_network():
     print('END')
 
 
-i = 2
+i = 1
 
 for j in range(i):
 

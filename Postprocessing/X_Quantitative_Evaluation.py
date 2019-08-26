@@ -500,7 +500,7 @@ meshdata_1 = 'meshdata_249.csv'
 meshdata_2 = 'meshdata_12999.csv'
 
 # plot_3_d_diameter(a, meshdata_1, meshdata_2)
-adjoint_data_plot(_path_adjoint_file)
+# adjoint_data_plot(_path_adjoint_file)
 # compute_flow_change(_start_file, _end_file_, activated_eids)
 # plot_3_d_plasma(a, meshdata_1, meshdata_2)
 # plot_diameter_change(a, meshdata_1, meshdata_2)

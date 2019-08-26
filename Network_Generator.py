@@ -693,7 +693,7 @@ def add_penetrating_tree_to_cap_bed(graph_penetrating_tree, graph_capillary_bed,
                     possible_connections_edge_ids = Chose_activated_region.define_possible_connections(graph_capillary_bed,
                                                                                                    coord_sphere, _radius_)
 
-                    _radius_ = length_honeycomb * 1.5
+                    _radius_ = length_honeycomb * 1.6
 
                 print('Possible connections exist.')
                 print('Length: ', len(possible_connections_edge_ids))
