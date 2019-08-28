@@ -5,6 +5,38 @@ import numpy as np
 import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
+import json
+
+def plot_3d_cube():
+    plt.figure(facecolor='w', figsize=(10, 40))
+    # generate random data
+    x = np.random.randint(0, 500, (11, 11))
+
+    print(x[1])
+    dmin, dmax = 0, 200
+    plt.imshow(x, vmin=dmin, vmax=dmax)
+
+    # create the colorbar
+    # the aspect of the colorbar is set to 'equal', we have to set it to 'auto',
+    # otherwise twinx() will do weird stuff.
+    # ref: Draw colorbar with twin scales - stack overflow -
+    # URL: https://stackoverflow.com/questions/27151098/draw-colorbar-with-twin-scales
+    cbar = plt.colorbar()
+    pos = cbar.ax.get_position()
+    ax1 = cbar.ax
+    ax1.set_aspect('auto')
+
+    # resize the colorbar
+    pos.x1 -= 0.08
+
+    # arrange and adjust the position of each axis, ticks, and ticklabels
+    ax1.set_position(pos)
+    ax1.yaxis.set_ticks_position('right')  # set the position of the first axis to right
+    ax1.yaxis.set_label_position('right')  # set the position of the fitst axis to right
+    ax1.set_ylabel(u'Flow Rate [$m^3/s$]')
+
+    # Save the figure
+    plt.show()
 
 
 def find_points_on_line(p_1, p_2, number_of_points):
@@ -394,8 +426,6 @@ def flow_versus_depth_comparison(network_ids, segments, path_eval):
 
         regions = []
         labels_x = []
-        corresponding_flows = []
-        corresponding_eids = []
         averaged_flow_rates_per_region = []
 
         for i in range(segments):
@@ -403,7 +433,7 @@ def flow_versus_depth_comparison(network_ids, segments, path_eval):
             start = z_min + i * segment_length
             end = start + segment_length
 
-            labels_x.append(np.round((start+end)/(2*delta_z), 2))
+            labels_x.append(np.round((start+end)/2, 2))
             regions.append([start, end])
 
         for region in range(len(regions)):
@@ -414,43 +444,57 @@ def flow_versus_depth_comparison(network_ids, segments, path_eval):
 
             flows_in_region = []
             eids_in_region = []
+            corresponding_length = []
 
             for i in range(graph.ecount()):
 
-                source_node = graph.es[i].source
-                target_node = graph.es[i].target
+                if graph.es[i]['Type'] == 0 or graph.es[i]['Type'] == 3:
 
-                z_coord_source_node = graph.vs[source_node]['z_coordinate']
-                z_coord_target_node = graph.vs[target_node]['z_coordinate']
+                    source_node = graph.es[i].source
+                    target_node = graph.es[i].target
 
-                if z_lower < z_coord_source_node < z_upper:
+                    z_coord_source_node = graph.vs[source_node]['z_coordinate']
+                    z_coord_target_node = graph.vs[target_node]['z_coordinate']
 
-                    flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
-                    eids_in_region.append(i)
-                    graph.es[i]['RegionID'] = region
+                    if z_lower < z_coord_source_node < z_upper:
 
-                elif z_lower < z_coord_target_node < z_upper:
+                        flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                        eids_in_region.append(i)
+                        corresponding_length.append(graph.es[i]['edge_length'])
+                        graph.es[i]['RegionID'] = region
 
-                    flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
-                    eids_in_region.append(i)
-                    graph.es[i]['RegionID'] = region
+                    elif z_lower < z_coord_target_node < z_upper:
 
-                elif z_coord_source_node > z_upper and z_coord_target_node < z_lower:
+                        flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                        eids_in_region.append(i)
+                        corresponding_length.append(graph.es[i]['edge_length'])
+                        graph.es[i]['RegionID'] = region
 
-                    flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
-                    eids_in_region.append(i)
-                    graph.es[i]['RegionID'] = region
+                    elif z_coord_source_node > z_upper and z_coord_target_node < z_lower:
 
-                elif z_coord_source_node < z_lower and z_coord_target_node > z_upper:
+                        flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                        eids_in_region.append(i)
+                        corresponding_length.append(graph.es[i]['edge_length'])
+                        graph.es[i]['RegionID'] = region
 
-                    flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
-                    eids_in_region.append(i)
-                    graph.es[i]['RegionID'] = region
+                    elif z_coord_source_node < z_lower and z_coord_target_node > z_upper:
 
-            corresponding_flows.append(flows_in_region)
-            corresponding_eids.append(eids_in_region)
+                        flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                        eids_in_region.append(i)
+                        corresponding_length.append(graph.es[i]['edge_length'])
+                        graph.es[i]['RegionID'] = region
 
-            averaged_flow_rates_per_region.append(np.average(flows_in_region))
+                else:
+
+                    None
+
+            flows_as_array = np.array(flows_in_region)
+            length_as_array = np.array(corresponding_length)
+            total_length = np.sum(corresponding_length)
+
+            averaged_flow_in_region = np.sum((flows_as_array * length_as_array)) / total_length
+
+            averaged_flow_rates_per_region.append(averaged_flow_in_region)
 
         data_sets.append([labels_x, averaged_flow_rates_per_region])
 
@@ -458,12 +502,122 @@ def flow_versus_depth_comparison(network_ids, segments, path_eval):
 
         plt.plot(data_sets[i][0], data_sets[i][1], label='Network ID: ' + str(network_ids[i]))
 
-    plt.ylabel('Averaged Flow Rates')
-    plt.xlabel('Depth / Total Depth')
+    plt.ylabel('(Length) Averaged Flow Rates')
+    plt.xlabel('Depth [$\mu$m]')
     plt.gcf().subplots_adjust(bottom=0.2)
     plt.legend()
     plt.grid(True)
     plt.savefig(path_eval + '\\Depth_Vs_Flow_Comparison.png')
+
+    return None
+
+
+def flow_versus_depth_comparison_difference_v_edges(network_ids, segments, path_eval):
+
+    data_sets = []
+
+    for j in range(len(network_ids)):
+
+        path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Networks\\' + str(network_ids[j]) + '\\graph.pkl'
+
+        graph = ig.Graph.Read_Pickle(path)
+
+        meshdata_file = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Flow_Problem\\' + str(network_ids[j]) + '_Baseflow\\out\\meshdata_249.csv'
+
+        df_start = pd.read_csv(meshdata_file)
+
+        z_min = min(graph.vs['z_coordinate'])
+        z_max = max(graph.vs['z_coordinate'])
+
+        delta_z = z_max - z_min
+
+        segment_length = delta_z / segments
+
+        regions = []
+        labels_x = []
+        averaged_flow_rates_per_region = []
+
+        for i in range(segments):
+
+            start = z_min + i * segment_length
+            end = start + segment_length
+
+            labels_x.append(np.round((start+end)/2, 2))
+            regions.append([start, end])
+
+        for region in range(len(regions)):
+
+            reg = regions[region]
+            z_lower = reg[0]
+            z_upper = reg[1]
+
+            flows_in_region = []
+            eids_in_region = []
+            corresponding_length = []
+
+            for i in range(graph.ecount()):
+
+                if graph.es[i]['Type'] == 0 or graph.es[i]['Type'] == 3:
+
+                    source_node = graph.es[i].source
+                    target_node = graph.es[i].target
+
+                    z_coord_source_node = graph.vs[source_node]['z_coordinate']
+                    z_coord_target_node = graph.vs[target_node]['z_coordinate']
+
+                    if z_lower < z_coord_source_node < z_upper:
+
+                        flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                        eids_in_region.append(i)
+                        corresponding_length.append(graph.es[i]['edge_length'])
+                        graph.es[i]['RegionID'] = region
+
+                    elif z_lower < z_coord_target_node < z_upper:
+
+                        flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                        eids_in_region.append(i)
+                        corresponding_length.append(graph.es[i]['edge_length'])
+                        graph.es[i]['RegionID'] = region
+
+                    elif z_coord_source_node > z_upper and z_coord_target_node < z_lower:
+
+                        flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                        eids_in_region.append(i)
+                        corresponding_length.append(graph.es[i]['edge_length'])
+                        graph.es[i]['RegionID'] = region
+
+                    elif z_coord_source_node < z_lower and z_coord_target_node > z_upper:
+
+                        flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                        eids_in_region.append(i)
+                        corresponding_length.append(graph.es[i]['edge_length'])
+                        graph.es[i]['RegionID'] = region
+
+                else:
+
+                    None
+
+            flows_as_array = np.array(flows_in_region)
+            length_as_array = np.array(corresponding_length)
+            total_length = np.sum(corresponding_length)
+
+            averaged_flow_in_region = np.sum((flows_as_array * length_as_array)) / total_length
+
+            averaged_flow_rates_per_region.append(averaged_flow_in_region)
+
+        data_sets.append([labels_x, averaged_flow_rates_per_region])
+
+    for i in range(len(data_sets)):
+
+        d2 = json.load(open('D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Networks\\' + str(network_ids[i]) + '\\read_me.txt'))
+        plt.plot(data_sets[i][0], data_sets[i][1], label='Percentage: ' + str(d2['Percentag_Vertical_Vessels']))
+
+    plt.ylabel('(Length) Averaged Flow Rates')
+    plt.xlabel('Depth [$\mu$m]')
+    plt.gcf().subplots_adjust(bottom=0.2)
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(path_eval + '\\Depth_Vs_Flow_Comparison_Diff_V_Edges.png')
 
     return None
 
@@ -481,8 +635,6 @@ def flow_versus_depth(graph, segments, meshdata_file, path_eval, network):
 
     regions = []
     labels_x = []
-    corresponding_flows = []
-    corresponding_eids = []
     averaged_flow_rates_per_region = []
 
     for i in range(segments):
@@ -501,48 +653,63 @@ def flow_versus_depth(graph, segments, meshdata_file, path_eval, network):
 
         flows_in_region = []
         eids_in_region = []
+        corresponding_length = []
 
         for i in range(graph.ecount()):
 
-            source_node = graph.es[i].source
-            target_node = graph.es[i].target
+            if graph.es[i]['Type'] == 0 or graph.es[i]['Type'] == 3:
 
-            z_coord_source_node = graph.vs[source_node]['z_coordinate']
-            z_coord_target_node = graph.vs[target_node]['z_coordinate']
+                source_node = graph.es[i].source
+                target_node = graph.es[i].target
 
-            if z_lower < z_coord_source_node < z_upper:
+                z_coord_source_node = graph.vs[source_node]['z_coordinate']
+                z_coord_target_node = graph.vs[target_node]['z_coordinate']
 
-                flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
-                eids_in_region.append(i)
-                graph.es[i]['RegionID'] = region
+                if z_lower < z_coord_source_node < z_upper:
 
-            elif z_lower < z_coord_target_node < z_upper:
+                    flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                    eids_in_region.append(i)
+                    corresponding_length.append(graph.es[i]['edge_length'])
+                    graph.es[i]['RegionID'] = region
 
-                flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
-                eids_in_region.append(i)
-                graph.es[i]['RegionID'] = region
+                elif z_lower < z_coord_target_node < z_upper:
 
-            elif z_coord_source_node > z_upper and z_coord_target_node < z_lower:
+                    flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                    eids_in_region.append(i)
+                    corresponding_length.append(graph.es[i]['edge_length'])
+                    graph.es[i]['RegionID'] = region
 
-                flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
-                eids_in_region.append(i)
-                graph.es[i]['RegionID'] = region
+                elif z_coord_source_node > z_upper and z_coord_target_node < z_lower:
 
-            elif z_coord_source_node < z_lower and z_coord_target_node > z_upper:
+                    flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                    eids_in_region.append(i)
+                    corresponding_length.append(graph.es[i]['edge_length'])
+                    graph.es[i]['RegionID'] = region
 
-                flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
-                eids_in_region.append(i)
-                graph.es[i]['RegionID'] = region
+                elif z_coord_source_node < z_lower and z_coord_target_node > z_upper:
 
-        corresponding_flows.append(flows_in_region)
-        corresponding_eids.append(eids_in_region)
+                    flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                    eids_in_region.append(i)
+                    corresponding_length.append(graph.es[i]['edge_length'])
+                    graph.es[i]['RegionID'] = region
 
-        averaged_flow_rates_per_region.append(np.average(flows_in_region))
+            else:
+
+                None
+
+        flows_as_array = np.array(flows_in_region)
+        length_as_array = np.array(corresponding_length)
+
+        total_length = np.sum(corresponding_length)
+
+        averaged_flow_in_region = np.sum((flows_as_array * length_as_array)) / total_length
+
+        averaged_flow_rates_per_region.append(averaged_flow_in_region)
         # plot_tree_with_regions(graph, region)
 
     plt.plot(labels_x, averaged_flow_rates_per_region)
     plt.xticks(labels_x, labels_x, rotation=45,  size=7)
-    plt.ylabel('Averaged Flow Rates')
+    plt.ylabel('(Length) Averaged Flow Rates')
     plt.xlabel('Depth in $\mu$m')
     plt.gcf().subplots_adjust(bottom=0.2)
     plt.savefig(path_eval + '\\Flow_Versus_Depth_Network_' + str(network) + '.png')
@@ -552,6 +719,9 @@ def flow_versus_depth(graph, segments, meshdata_file, path_eval, network):
 
 
 def flow_rate_cube(graph, cube_side_length, meshdata_file):
+
+    Final_Flows_Output = []
+    Final_Edge_Eids_Output = []
 
     df_start = pd.read_csv(meshdata_file)
 
@@ -617,6 +787,7 @@ def flow_rate_cube(graph, cube_side_length, meshdata_file):
     # Initialize Dictionary for cubes
 
     cube_coordinates = []
+    cube_position = []
 
     for x in range(number_of_cubes_x):
 
@@ -624,89 +795,149 @@ def flow_rate_cube(graph, cube_side_length, meshdata_file):
 
             for z in range(number_of_cubes_z):
 
-                print(x, y, z)
+                # print(x, y, z)
                 cube_coordinates.append([regions_x[x], regions_y[y], regions_z[z]])
+                cube_position.append([x, y, z])
+
 
     cube_dictionary_edge_ids = {}
     cube_dictionary_flow_rates = {}
+    cube_dictionary_length = {}
 
     for k in range(len(cube_coordinates)):
 
         cube_dictionary_edge_ids[str(k)] = []
         cube_dictionary_flow_rates[str(k)] = []
+        cube_dictionary_length[str(k)] = []
 
     for _edge_ in range(graph.ecount()):
 
-        print('Edge ', _edge_, ' out of ', graph.ecount())
-        source_node = graph.es[_edge_].source
-        target_node = graph.es[_edge_].target
+        if graph.es[_edge_]['Type'] == 0 or graph.es[_edge_]['Type'] == 3:
 
-        x_source = graph.vs[source_node]['x_coordinate']
-        y_source = graph.vs[source_node]['y_coordinate']
-        z_source = graph.vs[source_node]['z_coordinate']
-        p_source = [x_source, y_source, z_source]
+            print('Edge ', _edge_, ' out of ', graph.ecount())
+            source_node = graph.es[_edge_].source
+            target_node = graph.es[_edge_].target
 
-        x_target = graph.vs[target_node]['x_coordinate']
-        y_target = graph.vs[target_node]['y_coordinate']
-        z_target = graph.vs[target_node]['z_coordinate']
-        p_target = [x_target, y_target, z_target]
+            x_source = graph.vs[source_node]['x_coordinate']
+            y_source = graph.vs[source_node]['y_coordinate']
+            z_source = graph.vs[source_node]['z_coordinate']
+            p_source = [x_source, y_source, z_source]
 
-        points_in_between = find_points_on_line(p_source, p_target, 5)
+            x_target = graph.vs[target_node]['x_coordinate']
+            y_target = graph.vs[target_node]['y_coordinate']
+            z_target = graph.vs[target_node]['z_coordinate']
+            p_target = [x_target, y_target, z_target]
 
-        for cube in range(len(cube_coordinates)):
+            points_in_between = find_points_on_line(p_source, p_target, 5)
 
-            x_lower = cube_coordinates[cube][0][0]
-            x_upper = cube_coordinates[cube][0][1]
-            y_lower = cube_coordinates[cube][1][0]
-            y_upper = cube_coordinates[cube][1][1]
-            z_lower = cube_coordinates[cube][2][0]
-            z_upper = cube_coordinates[cube][2][1]
+            for cube in range(len(cube_coordinates)):
 
-            for point in points_in_between:
+                x_lower = cube_coordinates[cube][0][0]
+                x_upper = cube_coordinates[cube][0][1]
+                y_lower = cube_coordinates[cube][1][0]
+                y_upper = cube_coordinates[cube][1][1]
+                z_lower = cube_coordinates[cube][2][0]
+                z_upper = cube_coordinates[cube][2][1]
 
-                x_point = point[0]
-                y_point = point[1]
-                z_point = point[2]
+                for point in points_in_between:
 
-                if x_lower < x_point < x_upper:
+                    x_point = point[0]
+                    y_point = point[1]
+                    z_point = point[2]
 
-                    if y_lower < y_point < y_upper:
+                    if x_lower < x_point < x_upper:
 
-                        if z_lower < z_point < z_upper:
+                        if y_lower < y_point < y_upper:
 
-                            list_so_far_ids = cube_dictionary_edge_ids[str(cube)]
-                            list_so_far_ids.append(_edge_)
-                            cube_dictionary_edge_ids[str(cube)] = list_so_far_ids
+                            if z_lower < z_point < z_upper:
 
-                            flows_so_far = cube_dictionary_flow_rates[str(cube)]
-                            flows_so_far.append(np.absolute(df_start['tav_Fplasma'][2 * _edge_]))
-                            cube_dictionary_flow_rates[str(cube)] = flows_so_far
-                            break
+                                list_so_far_ids = cube_dictionary_edge_ids[str(cube)]
+                                list_so_far_ids.append(_edge_)
+                                cube_dictionary_edge_ids[str(cube)] = list_so_far_ids
 
-    print(cube_coordinates)
-    print(cube_dictionary_edge_ids)
-    print(cube_dictionary_flow_rates)
+                                flows_so_far = cube_dictionary_flow_rates[str(cube)]
+                                flows_so_far.append(np.absolute(df_start['tav_Fplasma'][2 * _edge_]))
+                                cube_dictionary_flow_rates[str(cube)] = flows_so_far
 
-    return
+                                length_so_far = cube_dictionary_length[str(cube)]
+                                length_so_far.append(graph.es[_edge_]['edge_length'])
+                                cube_dictionary_length[str(cube)] = length_so_far
+
+                                break
+
+    # for i in cube_dictionary_edge_ids['3']:
+    #
+    #     graph.es[i]['RegionID'] = 1
+    #
+    # plot_tree_with_regions(graph, 1)
+
+    for cube in range(len(cube_coordinates)):
+
+        length_cube = np.array(cube_dictionary_length[str(cube)])
+        flows_cube = np.array(cube_dictionary_flow_rates[str(cube)])
+
+        length_total = np.sum(length_cube)
+
+        flow_in_cube = np.sum((length_cube*flows_cube))/length_total
+
+        Final_Flows_Output.append(flow_in_cube)
+        Final_Edge_Eids_Output.append(cube_dictionary_edge_ids[str(cube)])
+
+    data_package = {'Coordinates': cube_coordinates, 'Eids': Final_Edge_Eids_Output, 'Flow_Rates': Final_Flows_Output,
+                    'Position': cube_position}
+
+    # print('CUBE:')
+    # print(cube_coordinates)
+    #
+    # print('EIDS: ')
+    # print(Final_Edge_Eids_Output)
+    #
+    # print('FLOWS: ')
+    # print(Final_Flows_Output)
+    #
+    # print('POSITION: ')
+    # print(cube_position)
+
+    return data_package
 
 
 ########################################################################################################################
 #                                                   Flow Rate per Cube                                                 #
 ########################################################################################################################
 
-for i in range(1):
+# for i in range(1):
+#
+#     path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Networks\\' \
+#             + str(i) + '\\graph.pkl'
+#
+#     path1 = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Flow_Problem\\' \
+#             + str(i) + '_Baseflow\\out\\meshdata_249.csv'
+#
+#     path2 = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Flow_Problem\\' \
+#              'Evaluation'
+#
+#     graph_ = ig.Graph.Read_Pickle(path)
+#     flow_rate_cube(graph_, 200, path1)
 
-    path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Networks\\' \
-            + str(i) + '\\graph.pkl'
+########################################################################################################################
+#                                                   3D Cube Plot                                                #
+########################################################################################################################
 
-    path1 = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Flow_Problem\\' \
-            + str(i) + '_Baseflow\\out\\meshdata_249.csv'
-
-    path2 = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Flow_Problem\\' \
-             'Evaluation'
-
-    graph_ = ig.Graph.Read_Pickle(path)
-    flow_rate_cube(graph_, 200, path1)
+# for i in range(1):
+#
+#     path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Networks\\' \
+#             + str(i) + '\\graph.pkl'
+#
+#     path1 = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Flow_Problem\\' \
+#             + str(i) + '_Baseflow\\out\\meshdata_249.csv'
+#
+#     path2 = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Flow_Problem\\' \
+#              'Evaluation'
+#
+#     graph_ = ig.Graph.Read_Pickle(path)
+#     cube_info = flow_rate_cube(graph_, 200, path1)
+#
+#
 
 ########################################################################################################################
 #                                                Topology Characteristics                                              #
@@ -776,16 +1007,29 @@ for i in range(1):
 #             'Evaluation'
 #
 #     graph_ = ig.Graph.Read_Pickle(path)
-#     flow_versus_depth(graph_, 20, path1, path2, i)
+#     flow_versus_depth(graph_, 10, path1, path2, i)
 
 ########################################################################################################################
 #                                          Network Comparison (Depth vs. Flow)                                         #
+########################################################################################################################
+#
+# target_path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Flow_Problem' \
+#         '\\Evaluation'
+#
+# number_of_segments = 12
+# net_ids = [0, 1, 2, 3, 4]
+#
+# flow_versus_depth_comparison(net_ids, number_of_segments, target_path)
+
+
+########################################################################################################################
+#                                   Network Comparison - Different Nr Vertical Edges                                   #
 ########################################################################################################################
 
 # target_path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Flow_Problem' \
 #         '\\Evaluation'
 #
-# number_of_segments = 15
-# network_ids = [1, 5, 9, 12, 19]
+# number_of_segments = 25
+# net_ids = [26, 20, 23, 25, 29]
 #
-# flow_versus_depth_comparison(network_ids, number_of_segments, target_path)
+# flow_versus_depth_comparison_difference_v_edges(net_ids, number_of_segments, target_path)

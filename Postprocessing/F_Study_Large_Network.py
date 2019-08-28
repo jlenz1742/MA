@@ -79,14 +79,132 @@ def volume_fractions(graph):
 
     return fraction_dict
 
+
+def flow_versus_depth(graph, segments, meshdata_file, path_eval, network):
+
+    df_start = pd.read_csv(meshdata_file)
+
+    z_min = min(graph.vs['z_coordinate'])
+    z_max = max(graph.vs['z_coordinate'])
+
+    delta_z = z_max - z_min
+
+    segment_length = delta_z / segments
+
+    regions = []
+    labels_x = []
+    averaged_flow_rates_per_region = []
+
+    for i in range(segments):
+
+        start = z_min + i * segment_length
+        end = start + segment_length
+
+        labels_x.append(np.round((start+end)/2, 2))
+        regions.append([start, end])
+
+    for region in range(len(regions)):
+
+        reg = regions[region]
+        z_lower = reg[0]
+        z_upper = reg[1]
+
+        flows_in_region = []
+        eids_in_region = []
+        corresponding_length = []
+
+        for i in range(graph.ecount()):
+
+            if graph.es[i]['Type'] == 0 or graph.es[i]['Type'] == 3:
+
+                source_node = graph.es[i].source
+                target_node = graph.es[i].target
+
+                z_coord_source_node = graph.vs[source_node]['z_coordinate']
+                z_coord_target_node = graph.vs[target_node]['z_coordinate']
+
+                if z_lower < z_coord_source_node < z_upper:
+
+                    flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                    eids_in_region.append(i)
+                    corresponding_length.append(graph.es[i]['edge_length'])
+                    graph.es[i]['RegionID'] = region
+
+                elif z_lower < z_coord_target_node < z_upper:
+
+                    flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                    eids_in_region.append(i)
+                    corresponding_length.append(graph.es[i]['edge_length'])
+                    graph.es[i]['RegionID'] = region
+
+                elif z_coord_source_node > z_upper and z_coord_target_node < z_lower:
+
+                    flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                    eids_in_region.append(i)
+                    corresponding_length.append(graph.es[i]['edge_length'])
+                    graph.es[i]['RegionID'] = region
+
+                elif z_coord_source_node < z_lower and z_coord_target_node > z_upper:
+
+                    flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                    eids_in_region.append(i)
+                    corresponding_length.append(graph.es[i]['edge_length'])
+                    graph.es[i]['RegionID'] = region
+
+            else:
+
+                None
+
+        flows_as_array = np.array(flows_in_region)
+        length_as_array = np.array(corresponding_length)
+
+        total_length = np.sum(corresponding_length)
+
+        averaged_flow_in_region = np.sum((flows_as_array * length_as_array)) / total_length
+
+        averaged_flow_rates_per_region.append(averaged_flow_in_region)
+        # plot_tree_with_regions(graph, region)
+
+    plt.plot(labels_x, averaged_flow_rates_per_region)
+    plt.xticks(labels_x, labels_x, rotation=45,  size=7)
+    plt.ylabel('(Length) Averaged Flow Rates')
+    plt.xlabel('Depth in $\mu$m')
+    plt.gcf().subplots_adjust(bottom=0.2)
+    plt.savefig(path_eval + '\\Flow_Versus_Depth_Network_' + str(network) + '.png')
+    plt.clf()
+
+    return None
+
+
 ########################################################################################################################
 #                                                    Volume Fractions                                                  #
 ########################################################################################################################
 
-for i in range(2):
+# for i in range(2):
+#
+#     path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\03_Network_Study_Large\\Networks\\' \
+#            + str(i) + '\\graph.pkl'
+#
+#     graph_ = ig.Graph.Read_Pickle(path)
+#     print(volume_fractions(graph_))
 
-    path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\03_Network_Study_Large\\Networks\\' \
-           + str(i) + '\\graph.pkl'
 
-    graph_ = ig.Graph.Read_Pickle(path)
-    print(volume_fractions(graph_))
+########################################################################################################################
+#                                               Depth versus Flow Rate                                                 #
+########################################################################################################################
+
+# ACHTUNG ES FEHLEN NOCH DIE BASEFLOW ORDNER MIT MESHDATA FILES -> MÜSSEN ZUERST ERSTELLT WERDEN
+
+# for i in range(2):
+#
+#     path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\03_Network_Study_Large\\Networks\\' \
+#            + str(i) + '\\graph.pkl'
+#
+#     path1 = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\03_Network_Study_Large\\Flow_Problem\\' \
+#            + str(i) + '_Baseflow\\out\\meshdata_249.csv'
+#
+#     path2 = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\03_Network_Study_Large\\Flow_Problem\\' \
+#             'Evaluation'
+#
+#     graph_ = ig.Graph.Read_Pickle(path)
+#     flow_versus_depth(graph_, 10, path1, path2, i)

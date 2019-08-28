@@ -363,7 +363,6 @@ def create_csv_files_from_graph(graph, p_veins, p_arteries, key_word_all, summar
 
     # Total
 
-
     # Create Pickle File
 
     graph.write_pickle('Export/' + time_str + '\\' + 'graph.pkl')

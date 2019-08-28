@@ -1,6 +1,7 @@
 import math
 import Beta_Distribution
 import Chose_activated_region
+import random
 
 
 def create_3d_graph(graph, x, y, z, l_honeycomb, coord, diameter_info):
@@ -495,6 +496,7 @@ def create_plane(graph, x, y, z, l_honeycomb, coord_lim):
 
             graph.add_edge(nodes_slanting_to_the_left[j], nodes_slanting_to_left_upper_level[j])
             graph.es[graph.ecount() - 1]['CanBeConnectedToPenetratingTree'] = 1
+            graph.es[graph.ecount() - 1]['Vertical_Connection'] = 1
 
     else:
 
@@ -521,6 +523,7 @@ def create_plane(graph, x, y, z, l_honeycomb, coord_lim):
 
             graph.add_edge(nodes_slanting_to_the_right[j], nodes_slanting_to_the_right_upper_level[j])
             graph.es[graph.ecount() - 1]['CanBeConnectedToPenetratingTree'] = 1
+            graph.es[graph.ecount() - 1]['Vertical_Connection'] = 1
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -693,7 +696,7 @@ def add_penetrating_tree_to_cap_bed(graph_penetrating_tree, graph_capillary_bed,
                     possible_connections_edge_ids = Chose_activated_region.define_possible_connections(graph_capillary_bed,
                                                                                                    coord_sphere, _radius_)
 
-                    _radius_ = length_honeycomb * 1.6
+                    _radius_ = length_honeycomb * 1.5
 
                 print('Possible connections exist.')
                 print('Length: ', len(possible_connections_edge_ids))
@@ -762,3 +765,29 @@ def add_penetrating_tree_to_cap_bed(graph_penetrating_tree, graph_capillary_bed,
             continue
 
     return graph_capillary_bed
+
+
+def edit_capillary_bed(graph, number_of_edges_to_be_removed):
+
+    vertical_edges = []
+    vertical_edges_to_be_removed = []
+
+    for _edge_ in range(graph.ecount()):
+
+        if graph.es[_edge_]['Vertical_Connection'] == 1:
+
+            vertical_edges.append(_edge_)
+
+    for x in range(number_of_edges_to_be_removed):
+
+        random_element = random.choice(vertical_edges)
+        vertical_edges_to_be_removed.append(random_element)
+        vertical_edges.remove(random_element)
+
+    vertical_edges_to_be_removed.sort(reverse=True)
+
+    for j in vertical_edges_to_be_removed:
+
+        graph.delete_edges([j])
+
+    return graph
