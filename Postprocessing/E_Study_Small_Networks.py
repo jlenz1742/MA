@@ -6,36 +6,72 @@ import matplotlib as mpl
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 import json
+from matplotlib.ticker import NullFormatter
 
-def plot_3d_cube():
-    plt.figure(facecolor='w', figsize=(10, 40))
-    # generate random data
-    x = np.random.randint(0, 500, (11, 11))
 
-    print(x[1])
-    dmin, dmax = 0, 200
-    plt.imshow(x, vmin=dmin, vmax=dmax)
+def plot_3d_cube(flows, cube_flow_max, xticks, yticks, z_coord, graph):
 
-    # create the colorbar
-    # the aspect of the colorbar is set to 'equal', we have to set it to 'auto',
-    # otherwise twinx() will do weird stuff.
-    # ref: Draw colorbar with twin scales - stack overflow -
-    # URL: https://stackoverflow.com/questions/27151098/draw-colorbar-with-twin-scales
-    cbar = plt.colorbar()
-    pos = cbar.ax.get_position()
-    ax1 = cbar.ax
-    ax1.set_aspect('auto')
+    x_art = []
+    y_art = []
+    x_ven = []
+    y_ven = []
 
-    # resize the colorbar
-    pos.x1 -= 0.08
+    for v in range(graph.vcount()):
 
-    # arrange and adjust the position of each axis, ticks, and ticklabels
-    ax1.set_position(pos)
-    ax1.yaxis.set_ticks_position('right')  # set the position of the first axis to right
-    ax1.yaxis.set_label_position('right')  # set the position of the fitst axis to right
-    ax1.set_ylabel(u'Flow Rate [$m^3/s$]')
+        if graph.vs[v]['Type'] == 1:
 
-    # Save the figure
+            x_ven.append(graph.vs[v]['x_coordinate'])
+            y_ven.append(graph.vs[v]['y_coordinate'])
+
+        elif graph.vs[v]['Type'] == 2:
+
+            x_art.append(graph.vs[v]['x_coordinate'])
+            y_art.append(graph.vs[v]['y_coordinate'])
+
+    fig = plt.figure(figsize=(12, 5))
+    fig.subplots_adjust(right=0.9)
+    dmin, dmax = 0, cube_flow_max
+
+    # subplot number 1
+    ax1 = fig.add_subplot(1, 4, 1)
+    ax1.title.set_text(str(min(z_coord[0])) + ' < z < ' + str(max(z_coord[0])))
+    plt.xticks(xticks[0], size=6)
+    plt.yticks(yticks[0], size=6)
+    plt.scatter(x=x_art, y=y_art, s=0.5, c='r')
+    plt.scatter(x=x_ven, y=y_ven, s=0.5, c='b')
+    plt.imshow(flows[0], vmin=dmin, vmax=dmax, extent=[min(xticks[0]), max(xticks[0]), min(yticks[0]), max(yticks[0])])
+
+    # subplot number 2
+    ax2 = fig.add_subplot(1, 4, 2)
+    ax2.title.set_text(str(min(z_coord[1])) + ' < z < ' + str(max(z_coord[1])))
+    plt.xticks(xticks[1], size=6)
+    plt.yticks(yticks[1], size=6)
+    plt.scatter(x=x_art, y=y_art, s=0.5, c='r')
+    plt.scatter(x=x_ven, y=y_ven, s=0.5, c='b')
+    plt.imshow(flows[1], vmin=dmin, vmax=dmax, extent=[min(xticks[1]), max(xticks[1]), min(yticks[1]), max(yticks[1])])
+
+    # subplot number 3
+    ax3 = fig.add_subplot(1, 4, 3)
+    ax3.title.set_text(str(min(z_coord[2])) + ' < z < ' + str(max(z_coord[2])))
+    plt.xticks(xticks[2], size=6)
+    plt.yticks(yticks[2], size=6)
+    plt.scatter(x=x_art, y=y_art, s=0.5, c='r')
+    plt.scatter(x=x_ven, y=y_ven, s=0.5, c='b')
+    plt.imshow(flows[2], vmin=dmin, vmax=dmax, extent=[min(xticks[2]), max(xticks[2]), min(yticks[2]), max(yticks[2])])
+
+    # subplot number 4
+    ax4 = fig.add_subplot(1, 4, 4)
+    ax4.title.set_text(str(min(z_coord[2])) + ' < z < ' + str(max(z_coord[2])))
+    plt.xticks(xticks[3], size=6)
+    plt.yticks(yticks[3], size=6)
+    plt.scatter(x=x_art, y=y_art, s=0.5, c='r')
+    plt.scatter(x=x_ven, y=y_ven, s=0.5, c='b')
+    plt.imshow(flows[3], vmin=dmin, vmax=dmax, extent=[min(xticks[3]), max(xticks[3]), min(yticks[3]), max(yticks[3])])
+
+    # subplot for colorbar
+
+    ax_cbar = fig.add_axes([0.1, 0.1, 0.82, 0.05])
+    plt.colorbar(cax=ax_cbar, orientation='horizontal', label='Flow Rate [$m^3/s$]')
     plt.show()
 
 
@@ -865,12 +901,6 @@ def flow_rate_cube(graph, cube_side_length, meshdata_file):
 
                                 break
 
-    # for i in cube_dictionary_edge_ids['3']:
-    #
-    #     graph.es[i]['RegionID'] = 1
-    #
-    # plot_tree_with_regions(graph, 1)
-
     for cube in range(len(cube_coordinates)):
 
         length_cube = np.array(cube_dictionary_length[str(cube)])
@@ -884,7 +914,8 @@ def flow_rate_cube(graph, cube_side_length, meshdata_file):
         Final_Edge_Eids_Output.append(cube_dictionary_edge_ids[str(cube)])
 
     data_package = {'Coordinates': cube_coordinates, 'Eids': Final_Edge_Eids_Output, 'Flow_Rates': Final_Flows_Output,
-                    'Position': cube_position}
+                    'Position': cube_position, 'cubes_y': number_of_cubes_y, 'cubes_x': number_of_cubes_x,
+                    'cubes_z': number_of_cubes_z}
 
     # print('CUBE:')
     # print(cube_coordinates)
@@ -899,6 +930,18 @@ def flow_rate_cube(graph, cube_side_length, meshdata_file):
     # print(cube_position)
 
     return data_package
+
+
+def Sort(sub_li):
+
+    l = len(sub_li)
+    for i in range(0, l):
+        for j in range(0, l-i-1):
+            if (sub_li[j][1] > sub_li[j + 1][1]):
+                tempo = sub_li[j]
+                sub_li[j]= sub_li[j + 1]
+                sub_li[j + 1]= tempo
+    return sub_li
 
 
 ########################################################################################################################
@@ -920,10 +963,10 @@ def flow_rate_cube(graph, cube_side_length, meshdata_file):
 #     flow_rate_cube(graph_, 200, path1)
 
 ########################################################################################################################
-#                                                   3D Cube Plot                                                #
+#                                                   3D Cube Plot                                                       #
 ########################################################################################################################
 
-# for i in range(1):
+# for i in range(5):
 #
 #     path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Networks\\' \
 #             + str(i) + '\\graph.pkl'
@@ -935,9 +978,87 @@ def flow_rate_cube(graph, cube_side_length, meshdata_file):
 #              'Evaluation'
 #
 #     graph_ = ig.Graph.Read_Pickle(path)
-#     cube_info = flow_rate_cube(graph_, 200, path1)
+#     cube_info = flow_rate_cube(graph_, 150, path1)
 #
+#     cube_position = cube_info['Position']
+#     cube_Coordinates = cube_info['Coordinates']
+#     cube_flows = cube_info['Flow_Rates']
+#     max_cube_flow = max(cube_flows)
 #
+#     z_list = [0, 1, 2, 3]              # max 4
+#
+#     data_to_plot_tot = []
+#     x_coord_list_tot = []
+#     y_coord_list_tot = []
+#     z_coord_list_tot = []
+#
+#     for z in z_list:
+#
+#         data_to_plot = []
+#         data_to_plot_position = []
+#         coordinates = []
+#
+#         for y in range(cube_info['cubes_y']-1, -1, -1):
+#
+#             y_line_cubes = []
+#
+#             for x in range(cube_info['cubes_x']):
+#
+#                 y_line_cubes.append([x, y, z])
+#
+#             data_to_plot_position.append(y_line_cubes)
+#
+#         for j in data_to_plot_position:
+#
+#             current_y_line = j
+#             line_to_plot = []
+#
+#             for cube in current_y_line:
+#                 index = cube_position.index(cube)
+#                 line_to_plot.append(cube_flows[index])
+#                 coordinates.append(cube_Coordinates[index])
+#
+#             data_to_plot.append(line_to_plot)
+#
+#         x_coordinates = []
+#         y_coordinates = []
+#         z_coordinates = []
+#
+#         for coord in coordinates:
+#
+#             x_coordinates.append(coord[0])
+#             y_coordinates.append(coord[1])
+#             z_coordinates.append(coord[2])
+#
+#         x_coord_list = []
+#         y_coord_list = []
+#         z_coord_list = []
+#
+#         for x in x_coordinates:
+#
+#             x_coord_list.append(x[0])
+#             x_coord_list.append(x[1])
+#
+#         for y in y_coordinates:
+#             y_coord_list.append(y[0])
+#             y_coord_list.append(y[1])
+#
+#         for z in z_coordinates:
+#             z_coord_list.append(z[0])
+#             z_coord_list.append(z[1])
+#
+#         x_coord_list = list(dict.fromkeys(x_coord_list))
+#         y_coord_list = list(dict.fromkeys(y_coord_list))
+#         z_coord_list = list(dict.fromkeys(z_coord_list))
+#
+#         x_coord_list_tot.append(x_coord_list)
+#         y_coord_list_tot.append(y_coord_list)
+#         z_coord_list_tot.append(z_coord_list)
+#
+#         data_to_plot_tot.append(data_to_plot)
+#
+#     plot_3d_cube(data_to_plot_tot, max_cube_flow, x_coord_list_tot, y_coord_list_tot, z_coord_list_tot, graph_)
+
 
 ########################################################################################################################
 #                                                Topology Characteristics                                              #
