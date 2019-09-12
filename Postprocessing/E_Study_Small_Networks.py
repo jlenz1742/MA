@@ -1064,22 +1064,21 @@ def Sort(sub_li):
 #                                                Topology Characteristics                                              #
 ########################################################################################################################
 
-# for i in range(20):
-#
+#for i in range(30):
+
 #     path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Networks\\' \
 #            + str(i) + '\\graph.pkl'
-#
+
 #     target_path_arteries = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small' \
 #                            r'\Topologie\Arteries_Characteristics'
-#
+
 #     target_path_veins = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Topologie' \
 #                         r'\Veins_Charachteristics'
-#
+
 #     target_path_caps = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Topologie' \
 #                        r'\Capillaries_Characteristics'
-#
+
 #     graph_ = ig.Graph.Read_Pickle(path)
-#
 #     topology_characteristic_plot(target_path_arteries, target_path_veins, target_path_caps, graph_, i)
 
 ########################################################################################################################
@@ -1091,42 +1090,42 @@ def Sort(sub_li):
 # fraction_veins = []
 # fraction_arteries = []
 # fraction_capillaries = []
-#
-# for i in range(20):
-#
+
+# for i in range(30):
+
 #     path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Networks\\' \
 #            + str(i) + '\\graph.pkl'
-#
+
 #     graph_ = ig.Graph.Read_Pickle(path)
 #     fractions = volume_fractions(graph_)
-#
+
 #     fraction_all.append(fractions['All'])
 #     fraction_veins.append(fractions['Veins'])
 #     fraction_arteries.append(fractions['Arteries'])
 #     fraction_capillaries.append(fractions['Capillaries'])
-#
+
 # print(fraction_capillaries)
 # print(fraction_arteries)
 # print(fraction_veins)
 # print(fraction_all)
-#
+
 # volume_fractions_plot(fraction_capillaries, fraction_veins, fraction_arteries, fraction_all, target_path_topo)
 
 ########################################################################################################################
 #                                               Depth versus Flow Rate                                                 #
 ########################################################################################################################
 
-# for i in range(20):
-#
+# for i in range(30):
+
 #     path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Networks\\' \
 #            + str(i) + '\\graph.pkl'
-#
+
 #     path1 = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Flow_Problem\\' \
 #            + str(i) + '_Baseflow\\out\\meshdata_249.csv'
-#
+
 #     path2 = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Flow_Problem\\' \
 #             'Evaluation'
-#
+
 #     graph_ = ig.Graph.Read_Pickle(path)
 #     flow_versus_depth(graph_, 10, path1, path2, i)
 
@@ -1138,7 +1137,7 @@ def Sort(sub_li):
 #         '\\Evaluation'
 #
 # number_of_segments = 12
-# net_ids = [0, 1, 2, 3, 4]
+# net_ids = [1, 5, 15, 20, 29]
 #
 # flow_versus_depth_comparison(net_ids, number_of_segments, target_path)
 
