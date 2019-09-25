@@ -5,19 +5,12 @@ import numpy as np
 import pandas as pd
 import math
 from mpl_toolkits.mplot3d.art3d import Line3DCollection
+import csv
+import igraph as ig
 import os
-import glob
-
-_path_adjoint_file = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\adjointdata.csv'
-
-_start_file = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\Cutted\out\meshdata_249.csv'
-
-_end_file_ = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\Cutted\out\meshdata_2999.csv'
-
-activated_eids = [1657, 1662,1669,1670,1672,1734,1803,1809,1814,1820,1821,1822,1828,1882,1885,1887,1943,1950,1955,1956,1957,1962,1963,1969,1970,1977,2036,2099,2105,2110,2111,2112,2117,2118,2122,2123,2124,2185,2259,2266,2271,2278,2340,5828,5829,6802,6803,7057,7290,7291,7316,7745,7751,7762,7763,7765,7766,7768,7769,7770,7771,7789,7818,7819,8478,8479,8676,8677]
 
 
-def adjoint_data_plot(path):
+def adjoint_data_plot(path, target_path_):
 
     size_figure = (15, 15)
     fig = plt.figure(figsize=size_figure)
@@ -39,7 +32,6 @@ def adjoint_data_plot(path):
 
     plt.title("Cost Function", fontsize=10)
     plt.grid(True)
-    plt.legend()
 
     ####################################################################################################################
     #                                                                                                                  #
@@ -60,12 +52,13 @@ def adjoint_data_plot(path):
     plt.title("Regularization Rho n", fontsize=10)
     plt.grid(True)
     plt.legend()
-    plt.ylim(0, 0.4)
+    plt.ylim(0, 1.05 * max(regularization_rho_n))
 
-    plt.show()
+    plt.savefig(target_path_ + '\\' + 'Adjoint_plot.png')
+    plt.clf()
 
 
-def compute_flow_change(start_file, end_file, activated_ids):
+def compute_flow_change(start_file, end_file, activated_ids, target_path_):
 
     df_start = pd.read_csv(start_file)
     df_final = pd.read_csv(end_file)
@@ -135,7 +128,16 @@ def compute_flow_change(start_file, end_file, activated_ids):
     q_1 = l_activated * dir_ * f_end_new_array[activated_ids]
     q_1_sum = np.sum(q_1)
 
-    print(q_1_sum/q_0_sum)
+    relative_flow_change = q_1_sum/q_0_sum
+
+    if 1.29 < (q_1_sum/q_0_sum) < 1.31:
+
+        with open(target_path_ + '\Check_Flow_Change.txt', 'w') as f:
+            f.write("Succesfull, Flow Change is: %f" % relative_flow_change)
+
+    else:
+
+        print('No Successs: ', relative_flow_change)
 
 
 def compute_diameter_change(start_file, end_file, activated_ids):
@@ -171,13 +173,10 @@ def compute_diameter_change(start_file, end_file, activated_ids):
     print()
 
 
-def plot_3_d_diameter(path_target, meshdata_start, meshdata_final):
+def plot_3_d_diameter(meshdata_start, meshdata_final, target_path_):
+    df_start = pd.read_csv(meshdata_start)
+    df_final = pd.read_csv(meshdata_final)
 
-    mesh_data_file_start = meshdata_start
-    mesh_data_file_final = meshdata_final
-
-    df_start = pd.read_csv(path_target + "\\" + mesh_data_file_start)
-    df_final = pd.read_csv(path_target + "\\" + mesh_data_file_final)
 
     x = df_start['x']
     x_min = min(x)
@@ -251,8 +250,8 @@ def plot_3_d_diameter(path_target, meshdata_start, meshdata_final):
     max_diameter_change = max(t_new_array)-1
     min_diameter_change = np.absolute(np.absolute(min(t_new_array)) - 1)
 
-    a = np.where(1.02 > t_new_array)
-    b = np.where(0.98 < t_new_array)
+    a = np.where(1.005 > t_new_array)
+    b = np.where(0.995 < t_new_array)
     c = np.intersect1d(a, b)
 
     transparent_array = np.copy(np.asarray(segs)[c, ])
@@ -278,19 +277,19 @@ def plot_3_d_diameter(path_target, meshdata_start, meshdata_final):
 
         min_change = 1-max_diameter_change
 
-        lc = Line3DCollection(transparent_array, linewidths=transparent_diameters, alpha=0.3, cmap=plt.get_cmap('coolwarm', 5),
+        lc = Line3DCollection(transparent_array, linewidths=transparent_diameters, alpha=0.3, cmap=plt.get_cmap('coolwarm', 10),
                               norm=mpl.colors.Normalize(vmin=min_change, vmax=max(t_new_array)))
 
-        lb = Line3DCollection(non_transparent_segs, linewidths=non_transparent_diameters, alpha=1, cmap=plt.get_cmap('coolwarm', 5),
+        lb = Line3DCollection(non_transparent_segs, linewidths=non_transparent_diameters, alpha=1, cmap=plt.get_cmap('coolwarm', 10),
                               norm=mpl.colors.Normalize(vmin=min_change, vmax=max(t_new_array)))
     else:
 
         max_change = 1 + min_diameter_change
 
-        lc = Line3DCollection(transparent_array, linewidths=transparent_diameters, alpha=0.3, cmap=plt.get_cmap('coolwarm'),
+        lc = Line3DCollection(transparent_array, linewidths=transparent_diameters, alpha=0.3, cmap=plt.get_cmap('coolwarm', 10),
                               norm=mpl.colors.Normalize(vmin=min(t_new_array), vmax=max_change))
 
-        lb = Line3DCollection(non_transparent_segs, linewidths=non_transparent_diameters, alpha=1, cmap=plt.get_cmap('coolwarm', 5),
+        lb = Line3DCollection(non_transparent_segs, linewidths=non_transparent_diameters, alpha=1, cmap=plt.get_cmap('coolwarm', 10),
                               norm=mpl.colors.Normalize(vmin=min(t_new_array), vmax=max_change))
 
     lb.set_array(np.asarray(non_transparent_diameters_ratio))
@@ -299,6 +298,25 @@ def plot_3_d_diameter(path_target, meshdata_start, meshdata_final):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
+    ax.xaxis.pane.fill = False
+    ax.yaxis.pane.fill = False
+    ax.zaxis.pane.fill = False
+
+    # Now set color to white (or whatever is "invisible")
+    ax.xaxis.pane.set_edgecolor('w')
+    ax.yaxis.pane.set_edgecolor('w')
+    ax.zaxis.pane.set_edgecolor('w')
+
+    plt.xticks(fontsize=7, rotation=0)
+    plt.yticks(fontsize=7, rotation=0)
+    ax.zaxis.set_tick_params(labelsize=7)
+    ax.set_zlabel('Z Coordinate', rotation=0)
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
+
+    # Bonus: To get rid of the grid as well:
+    ax.grid(True)
+
     ax.add_collection3d(lb)
     ax.add_collection3d(lc)
 
@@ -306,14 +324,15 @@ def plot_3_d_diameter(path_target, meshdata_start, meshdata_final):
     ax.set_ylim(y_min, y_max)
     ax.set_zlim(z_min, z_max)
 
-    plt.colorbar(lb)
-    plt.show()
+    plt.colorbar(lb, label='Relative Diameter Change')
+    plt.savefig(target_path_ + '\\' + 'diameter_change_3D.png')
+    plt.clf()
 
 
-def plot_3_d_plasma(path_target, meshdata_start, meshdata_final):
+def plot_3_d_plasma(meshdata_start, meshdata_final, target_path_):
 
-    df_start = pd.read_csv(path_target + "\\" + meshdata_start)
-    df_final = pd.read_csv(path_target + "\\" + meshdata_final)
+    df_start = pd.read_csv(meshdata_start)
+    df_final = pd.read_csv(meshdata_final)
 
     # DIAMETER
 
@@ -425,26 +444,46 @@ def plot_3_d_plasma(path_target, meshdata_start, meshdata_final):
 
         min_change = 1-max_f_ratio_change
 
-        lc = Line3DCollection(transparent_array, linewidths=transparent_diameters, alpha=0.1, cmap=plt.get_cmap('coolwarm', 5),
+        lc = Line3DCollection(transparent_array, linewidths=transparent_diameters, alpha=0.5, cmap=plt.get_cmap('coolwarm', 10),
                               norm=mpl.colors.Normalize(vmin=0.5, vmax=1.5))
 
-        lb = Line3DCollection(non_transparent_segs, linewidths=non_transparent_diameters, alpha=1, cmap=plt.get_cmap('coolwarm', 5),
+        lb = Line3DCollection(non_transparent_segs, linewidths=non_transparent_diameters, alpha=1, cmap=plt.get_cmap('coolwarm', 10),
                               norm=mpl.colors.Normalize(vmin=0.5, vmax=1.5))
     else:
 
         max_change = 1 + min_f_ratio_change
 
-        lc = Line3DCollection(transparent_array, linewidths=transparent_diameters, alpha=0.1, cmap=plt.get_cmap('coolwarm'),
+        lc = Line3DCollection(transparent_array, linewidths=transparent_diameters, alpha=0.5, cmap=plt.get_cmap('coolwarm', 10),
                               norm=mpl.colors.Normalize(vmin=0.5, vmax=1.5))
 
-        lb = Line3DCollection(non_transparent_segs, linewidths=non_transparent_diameters, alpha=1, cmap=plt.get_cmap('coolwarm', 5),
+        lb = Line3DCollection(non_transparent_segs, linewidths=non_transparent_diameters, alpha=1, cmap=plt.get_cmap('coolwarm', 10),
                               norm=mpl.colors.Normalize(vmin=0.5, vmax=1.5))
 
-    lb.set_array(np.asarray(non_transpartent_flow_ratio))
     lc.set_array(transparent_flow_ratio)  # color the segments by our parameter
+    lb.set_array(np.asarray(non_transpartent_flow_ratio))
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
+
+    ax.xaxis.pane.fill = False
+    ax.yaxis.pane.fill = False
+    ax.zaxis.pane.fill = False
+
+    # Now set color to white (or whatever is "invisible")
+    ax.xaxis.pane.set_edgecolor('w')
+    ax.yaxis.pane.set_edgecolor('w')
+    ax.zaxis.pane.set_edgecolor('w')
+
+    plt.xticks(fontsize=7, rotation=0)
+    plt.yticks(fontsize=7, rotation=0)
+    ax.zaxis.set_tick_params(labelsize=7)
+    ax.set_zlabel('Z Coordinate', rotation=0)
+    plt.xlabel('X Coordinate')
+    plt.ylabel('Y Coordinate')
+
+    # Bonus: To get rid of the grid as well:
+    ax.grid(True)
+
 
     ax.add_collection3d(lb)
     ax.add_collection3d(lc)
@@ -453,60 +492,827 @@ def plot_3_d_plasma(path_target, meshdata_start, meshdata_final):
     ax.set_ylim(y_min, y_max)
     ax.set_zlim(z_min, z_max)
 
-    plt.colorbar(lb)
-    plt.show()
+    plt.colorbar(lb, label='Relative Flow Change')
+    plt.savefig(target_path_ + '\\' + 'flow_change_3D.png')
+    plt.clf()
 
 
-def plot_diameter_change(path_target, meshdata_start, meshdata_final):
+def plot_diameter_change(graph, meshdata_start, meshdata_final, target_path_):
 
-    mesh_data_file_start = meshdata_start
-    mesh_data_file_final = meshdata_final
+    df_start = pd.read_csv(meshdata_start)
+    df_final = pd.read_csv(meshdata_final)
 
-    df_start = pd.read_csv(path_target + "\\" + mesh_data_file_start)
-    df_final = pd.read_csv(path_target + "\\" + mesh_data_file_final)
+    graph_ = ig.Graph.Read_Pickle(graph)
 
     t_1 = np.array(df_start['D'])
     t_2 = np.array(df_final['D'])
 
     t = t_2 / t_1
     t_new = []
-    t_2_new = []
 
     for i in range(len(t)):
 
         if (i % 2) == 0:
-            t_2_new.append(t_2[i] / (4 / math.pow(10, 6)))
             t_new.append(t[i])
 
     t_new_array = np.asarray(t_new)
 
-    diameter_change = np.asarray(sorted(np.absolute((t_new_array-1)*100)))
-    index = np.where(np.asarray(diameter_change) > 0.1)
-    index_list = list(index[0])
-    print(index_list)
-    diameter_change_new = diameter_change[index_list]
+    diameter_change = np.asarray(np.absolute((t_new_array-1)*100))
+    print(diameter_change[0:10])
 
-    print(diameter_change)
-    n, bins, patches = plt.hist(diameter_change_new, bins='auto', density=False, facecolor='g', alpha=0.75)
+    diameter_change_capillaries = []
+    diameter_change_arteries = []
+    diameter_change_veins = []
+
+
+    for edge in range(graph_.ecount()):
+
+        if graph_.es[edge]['Type'] == 0 or graph_.es[edge]['Type'] == 3:
+
+            diameter_change_capillaries.append(diameter_change[edge])
+
+        elif graph_.es[edge]['Type'] == 1:
+
+            diameter_change_veins.append(diameter_change[edge])
+
+        elif graph_.es[edge]['Type'] == 2:
+
+            diameter_change_arteries.append((diameter_change[edge]))
+
+    diameter_change_capillaries = np.asarray(diameter_change_capillaries)
+    diameter_change_arteries = np.asarray(diameter_change_arteries)
+    diameter_change_veins = np.asarray(diameter_change_veins)
+
+    # index = np.where(np.asarray(diameter_change) > 0.1)
+    # index_list = list(index[0])
+    # # print(index_list)
+    # diameter_change_new = diameter_change[index_list]
+
+    index_cap = np.where(np.asarray(diameter_change_capillaries) > 0.5)
+    index_list_cap = list(index_cap[0])
+    diameter_change_cap_new = diameter_change_capillaries[index_list_cap]
+
+    index_art = np.where(np.asarray(diameter_change_arteries) > 0.5)
+    index_list_art = list(index_art[0])
+    diameter_change_art_new = diameter_change_arteries[index_list_art]
+
+    index_ve = np.where(np.asarray(diameter_change_veins) > 0.5)
+    index_list_ve = list(index_ve[0])
+    diameter_change_ve_new = diameter_change_veins[index_list_ve]
+
+    # print(diameter_change)
+    names = ['Capillaries', 'Veins', 'Arteries']
+    colors = ['#E69F00', '#56B4E9', '#D55E00']
+    n, bins, patches = plt.hist([diameter_change_cap_new, diameter_change_ve_new, diameter_change_art_new]
+                                , bins='auto', density=False, color=colors, stacked=True, alpha=0.75, label=names)
 
     plt.xlabel('Diameter Change in %')
     plt.ylabel('Number of Vessels')
-    plt.xlim(0, 10)
+    plt.xlim(0, 15)
     plt.grid(True)
+    plt.legend()
+    plt.savefig(target_path_ + '\\' + 'diameter_change_histogram.png')
+    plt.clf()
+
+
+def plot_3d_cube(flows, cube_flow_max, xticks, yticks, z_coord, graph):
+
+    print(flows[0])
+    print(flows[1])
+    print(flows[2])
+    print(flows[3])
+
+    x_art = []
+    y_art = []
+    x_ven = []
+    y_ven = []
+
+    for v in range(graph.vcount()):
+
+        if graph.vs[v]['Type'] == 1:
+
+            x_ven.append(graph.vs[v]['x_coordinate'])
+            y_ven.append(graph.vs[v]['y_coordinate'])
+
+        elif graph.vs[v]['Type'] == 2:
+
+            x_art.append(graph.vs[v]['x_coordinate'])
+            y_art.append(graph.vs[v]['y_coordinate'])
+
+    fig = plt.figure(figsize=(12, 5))
+    fig.subplots_adjust(right=0.9)
+    dmin, dmax = 0.8, cube_flow_max
+
+    # subplot number 1
+    ax1 = fig.add_subplot(1, 4, 1)
+    ax1.title.set_text(str(min(z_coord[0])) + ' < z < ' + str(max(z_coord[0])))
+    plt.xticks(xticks[0], size=6)
+    plt.yticks(yticks[0], size=6)
+    # plt.scatter(x=x_art, y=y_art, s=0.5, c='r')
+    # plt.scatter(x=x_ven, y=y_ven, s=0.5, c='b')
+    plt.imshow(flows[0], vmin=dmin, vmax=dmax, extent=[min(xticks[0]), max(xticks[0]), min(yticks[0]), max(yticks[0])])
+
+    # subplot number 2
+    ax2 = fig.add_subplot(1, 4, 2)
+    ax2.title.set_text(str(min(z_coord[1])) + ' < z < ' + str(max(z_coord[1])))
+    plt.xticks(xticks[1], size=6)
+    plt.yticks(yticks[1], size=6)
+    # plt.scatter(x=x_art, y=y_art, s=0.5, c='r')
+    # plt.scatter(x=x_ven, y=y_ven, s=0.5, c='b')
+    plt.imshow(flows[1], vmin=dmin, vmax=dmax, extent=[min(xticks[1]), max(xticks[1]), min(yticks[1]), max(yticks[1])])
+
+    # subplot number 3
+    ax3 = fig.add_subplot(1, 4, 3)
+    ax3.title.set_text(str(min(z_coord[2])) + ' < z < ' + str(max(z_coord[2])))
+    plt.xticks(xticks[2], size=6)
+    plt.yticks(yticks[2], size=6)
+    # plt.scatter(x=x_art, y=y_art, s=0.5, c='r')
+    # plt.scatter(x=x_ven, y=y_ven, s=0.5, c='b')
+    plt.imshow(flows[2], vmin=dmin, vmax=dmax, extent=[min(xticks[2]), max(xticks[2]), min(yticks[2]), max(yticks[2])])
+
+    # subplot number 4
+    ax4 = fig.add_subplot(1, 4, 4)
+    ax4.title.set_text(str(min(z_coord[3])) + ' < z < ' + str(max(z_coord[3])))
+    plt.xticks(xticks[3], size=6)
+    plt.yticks(yticks[3], size=6)
+    # plt.scatter(x=x_art, y=y_art, s=0.5, c='r')
+    # plt.scatter(x=x_ven, y=y_ven, s=0.5, c='b')
+    plt.imshow(flows[3], vmin=dmin, vmax=dmax, extent=[min(xticks[3]), max(xticks[3]), min(yticks[3]), max(yticks[3])])
+
+    # subplot for colorbar
+
+    ax_cbar = fig.add_axes([0.1, 0.1, 0.82, 0.05])
+    plt.colorbar(cax=ax_cbar, orientation='horizontal', label='Flow Rate [$m^3/s$]')
     plt.show()
 
-a = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\00_Simulations\i1\out'
-meshdata_1 = 'meshdata_249.csv'
-meshdata_2 = 'meshdata_12999.csv'
 
-# plot_3_d_diameter(a, meshdata_1, meshdata_2)
-# adjoint_data_plot(_path_adjoint_file)
-# compute_flow_change(_start_file, _end_file_, activated_eids)
-# plot_3_d_plasma(a, meshdata_1, meshdata_2)
-# plot_diameter_change(a, meshdata_1, meshdata_2)
+def distance_diameter_check():
+
+    return
 
 
+def flow_rate_cube(graph, cube_side_length, meshdata_file, meshdata_final):
 
+    Final_Flows_Output = []
+    Final_Edge_Eids_Output = []
+
+    df_start = pd.read_csv(meshdata_file)
+    df_final = pd.read_csv(meshdata_final)
+
+    # x segmentation
+
+    x_min = min(graph.vs['x_coordinate'])
+    x_max = max(graph.vs['x_coordinate'])
+
+    delta_x = x_max - x_min
+    number_of_cubes_x = math.ceil(delta_x / cube_side_length)
+
+    regions_x = []
+    labels_x = []
+
+    for k in range(number_of_cubes_x):
+
+        start = x_min + k * cube_side_length
+        end = start + cube_side_length
+
+        labels_x.append(np.round((start+end)/2, 2))
+        regions_x.append([start, end])
+
+    # y segmentation
+
+    y_min = min(graph.vs['y_coordinate'])
+    y_max = max(graph.vs['y_coordinate'])
+
+    delta_y = y_max - y_min
+
+    number_of_cubes_y = math.ceil(delta_y / cube_side_length)
+
+    regions_y = []
+    labels_y = []
+
+    for k in range(number_of_cubes_y):
+
+        start = y_min + k * cube_side_length
+        end = start + cube_side_length
+
+        labels_y.append(np.round((start+end)/2, 2))
+        regions_y.append([start, end])
+
+    # z segmentation
+
+    z_min = min(graph.vs['z_coordinate'])
+    z_max = max(graph.vs['z_coordinate'])
+
+    delta_z = z_max - z_min
+
+    number_of_cubes_z = math.ceil(delta_z / cube_side_length)
+
+    regions_z = []
+    labels_z = []
+
+    for k in range(number_of_cubes_z):
+
+        start = z_min + k * cube_side_length
+        end = start + cube_side_length
+
+        labels_z.append(np.round((start+end)/2, 2))
+        regions_z.append([start, end])
+
+    # Initialize Dictionary for cubes
+
+    cube_coordinates = []
+    cube_position = []
+
+    for x in range(number_of_cubes_x):
+
+        for y in range(number_of_cubes_y):
+
+            for z in range(number_of_cubes_z):
+
+                # print(x, y, z)
+                cube_coordinates.append([regions_x[x], regions_y[y], regions_z[z]])
+                cube_position.append([x, y, z])
+
+
+    cube_dictionary_edge_ids = {}
+    cube_dictionary_flow_rates = {}
+    cube_dictionary_length = {}
+
+    for k in range(len(cube_coordinates)):
+
+        cube_dictionary_edge_ids[str(k)] = []
+        cube_dictionary_flow_rates[str(k)] = []
+        cube_dictionary_length[str(k)] = []
+
+    for _edge_ in range(graph.ecount()):
+
+        if graph.es[_edge_]['Type'] == 0 or graph.es[_edge_]['Type'] == 3:
+
+            print('Edge ', _edge_, ' out of ', graph.ecount())
+            source_node = graph.es[_edge_].source
+            target_node = graph.es[_edge_].target
+
+            x_source = graph.vs[source_node]['x_coordinate']
+            y_source = graph.vs[source_node]['y_coordinate']
+            z_source = graph.vs[source_node]['z_coordinate']
+            p_source = [x_source, y_source, z_source]
+
+            x_target = graph.vs[target_node]['x_coordinate']
+            y_target = graph.vs[target_node]['y_coordinate']
+            z_target = graph.vs[target_node]['z_coordinate']
+            p_target = [x_target, y_target, z_target]
+
+            points_in_between = find_points_on_line(p_source, p_target, 5)
+
+            for cube in range(len(cube_coordinates)):
+
+                x_lower = cube_coordinates[cube][0][0]
+                x_upper = cube_coordinates[cube][0][1]
+                y_lower = cube_coordinates[cube][1][0]
+                y_upper = cube_coordinates[cube][1][1]
+                z_lower = cube_coordinates[cube][2][0]
+                z_upper = cube_coordinates[cube][2][1]
+
+                for point in points_in_between:
+
+                    x_point = point[0]
+                    y_point = point[1]
+                    z_point = point[2]
+
+                    if x_lower < x_point < x_upper:
+
+                        if y_lower < y_point < y_upper:
+
+                            if z_lower < z_point < z_upper:
+
+                                x = np.absolute(df_start['tav_Fplasma'][2 * _edge_]/df_final['tav_Fplasma'][2 * _edge_])
+
+                                if x < 5:
+
+                                    list_so_far_ids = cube_dictionary_edge_ids[str(cube)]
+                                    list_so_far_ids.append(_edge_)
+                                    cube_dictionary_edge_ids[str(cube)] = list_so_far_ids
+
+                                    flows_so_far = cube_dictionary_flow_rates[str(cube)]
+                                    flows_so_far.append(np.absolute(df_start['tav_Fplasma'][2 * _edge_]/df_final['tav_Fplasma'][2 * _edge_]))
+                                    print(np.absolute(df_start['tav_Fplasma'][2 * _edge_]/df_final['tav_Fplasma'][2 * _edge_]))
+                                    cube_dictionary_flow_rates[str(cube)] = flows_so_far
+
+                                    length_so_far = cube_dictionary_length[str(cube)]
+                                    length_so_far.append(graph.es[_edge_]['edge_length'])
+                                    cube_dictionary_length[str(cube)] = length_so_far
+
+                                    break
+
+    for cube in range(len(cube_coordinates)):
+
+        length_cube = np.array(cube_dictionary_length[str(cube)])
+        flows_cube = np.array(cube_dictionary_flow_rates[str(cube)])
+
+        length_total = np.sum(length_cube)
+
+        flow_in_cube = np.sum((length_cube*flows_cube))/length_total
+
+        Final_Flows_Output.append(flow_in_cube)
+        Final_Edge_Eids_Output.append(cube_dictionary_edge_ids[str(cube)])
+
+    data_package = {'Coordinates': cube_coordinates, 'Eids': Final_Edge_Eids_Output, 'Flow_Rates': Final_Flows_Output,
+                    'Position': cube_position, 'cubes_y': number_of_cubes_y, 'cubes_x': number_of_cubes_x,
+                    'cubes_z': number_of_cubes_z}
+
+    # print('CUBE:')
+    # print(cube_coordinates)
+    #
+    # print('EIDS: ')
+    # print(Final_Edge_Eids_Output)
+    #
+    # print('FLOWS: ')
+    # print(Final_Flows_Output)
+    #
+    # print('POSITION: ')
+    # print(cube_position)
+
+    return data_package
+
+
+def flow_rate_cube_diameters(graph, cube_side_length, meshdata_file, meshdata_final):
+
+    Final_Flows_Output = []
+    Final_Edge_Eids_Output = []
+
+    df_start = pd.read_csv(meshdata_file)
+    df_final = pd.read_csv(meshdata_final)
+
+    # x segmentation
+
+    x_min = min(graph.vs['x_coordinate'])
+    x_max = max(graph.vs['x_coordinate'])
+
+    delta_x = x_max - x_min
+    number_of_cubes_x = math.ceil(delta_x / cube_side_length)
+
+    regions_x = []
+    labels_x = []
+
+    for k in range(number_of_cubes_x):
+
+        start = x_min + k * cube_side_length
+        end = start + cube_side_length
+
+        labels_x.append(np.round((start+end)/2, 2))
+        regions_x.append([start, end])
+
+    # y segmentation
+
+    y_min = min(graph.vs['y_coordinate'])
+    y_max = max(graph.vs['y_coordinate'])
+
+    delta_y = y_max - y_min
+
+    number_of_cubes_y = math.ceil(delta_y / cube_side_length)
+
+    regions_y = []
+    labels_y = []
+
+    for k in range(number_of_cubes_y):
+
+        start = y_min + k * cube_side_length
+        end = start + cube_side_length
+
+        labels_y.append(np.round((start+end)/2, 2))
+        regions_y.append([start, end])
+
+    # z segmentation
+
+    z_min = min(graph.vs['z_coordinate'])
+    z_max = max(graph.vs['z_coordinate'])
+
+    delta_z = z_max - z_min
+
+    number_of_cubes_z = math.ceil(delta_z / cube_side_length)
+
+    regions_z = []
+    labels_z = []
+
+    for k in range(number_of_cubes_z):
+
+        start = z_min + k * cube_side_length
+        end = start + cube_side_length
+
+        labels_z.append(np.round((start+end)/2, 2))
+        regions_z.append([start, end])
+
+    # Initialize Dictionary for cubes
+
+    cube_coordinates = []
+    cube_position = []
+
+    for x in range(number_of_cubes_x):
+
+        for y in range(number_of_cubes_y):
+
+            for z in range(number_of_cubes_z):
+
+                # print(x, y, z)
+                cube_coordinates.append([regions_x[x], regions_y[y], regions_z[z]])
+                cube_position.append([x, y, z])
+
+
+    cube_dictionary_edge_ids = {}
+    cube_dictionary_flow_rates = {}
+    cube_dictionary_length = {}
+
+    for k in range(len(cube_coordinates)):
+
+        cube_dictionary_edge_ids[str(k)] = []
+        cube_dictionary_flow_rates[str(k)] = []
+        cube_dictionary_length[str(k)] = []
+
+    for _edge_ in range(graph.ecount()):
+
+        if graph.es[_edge_]['Type'] == 0 or graph.es[_edge_]['Type'] == 3:
+
+            print('Edge ', _edge_, ' out of ', graph.ecount())
+            source_node = graph.es[_edge_].source
+            target_node = graph.es[_edge_].target
+
+            x_source = graph.vs[source_node]['x_coordinate']
+            y_source = graph.vs[source_node]['y_coordinate']
+            z_source = graph.vs[source_node]['z_coordinate']
+            p_source = [x_source, y_source, z_source]
+
+            x_target = graph.vs[target_node]['x_coordinate']
+            y_target = graph.vs[target_node]['y_coordinate']
+            z_target = graph.vs[target_node]['z_coordinate']
+            p_target = [x_target, y_target, z_target]
+
+            points_in_between = find_points_on_line(p_source, p_target, 5)
+
+            for cube in range(len(cube_coordinates)):
+
+                x_lower = cube_coordinates[cube][0][0]
+                x_upper = cube_coordinates[cube][0][1]
+                y_lower = cube_coordinates[cube][1][0]
+                y_upper = cube_coordinates[cube][1][1]
+                z_lower = cube_coordinates[cube][2][0]
+                z_upper = cube_coordinates[cube][2][1]
+
+                for point in points_in_between:
+
+                    x_point = point[0]
+                    y_point = point[1]
+                    z_point = point[2]
+
+                    if x_lower < x_point < x_upper:
+
+                        if y_lower < y_point < y_upper:
+
+                            if z_lower < z_point < z_upper:
+
+                                x = np.absolute(df_start['D'][2 * _edge_]/df_final['D'][2 * _edge_])
+
+                                if x < 1.5:
+
+                                    list_so_far_ids = cube_dictionary_edge_ids[str(cube)]
+                                    list_so_far_ids.append(_edge_)
+                                    cube_dictionary_edge_ids[str(cube)] = list_so_far_ids
+
+                                    flows_so_far = cube_dictionary_flow_rates[str(cube)]
+                                    flows_so_far.append(np.absolute(df_start['D'][2 * _edge_]/df_final['D'][2 * _edge_]))
+                                    cube_dictionary_flow_rates[str(cube)] = flows_so_far
+
+                                    length_so_far = cube_dictionary_length[str(cube)]
+                                    length_so_far.append(graph.es[_edge_]['edge_length'])
+                                    cube_dictionary_length[str(cube)] = length_so_far
+
+                                    break
+
+    for cube in range(len(cube_coordinates)):
+
+        length_cube = np.array(cube_dictionary_length[str(cube)])
+        flows_cube = np.array(cube_dictionary_flow_rates[str(cube)])
+
+        length_total = np.sum(length_cube)
+
+        flow_in_cube = np.sum((length_cube*flows_cube))/length_total
+
+        Final_Flows_Output.append(flow_in_cube)
+        Final_Edge_Eids_Output.append(cube_dictionary_edge_ids[str(cube)])
+
+    data_package = {'Coordinates': cube_coordinates, 'Eids': Final_Edge_Eids_Output, 'Flow_Rates': Final_Flows_Output,
+                    'Position': cube_position, 'cubes_y': number_of_cubes_y, 'cubes_x': number_of_cubes_x,
+                    'cubes_z': number_of_cubes_z}
+
+    # print('CUBE:')
+    # print(cube_coordinates)
+    #
+    # print('EIDS: ')
+    # print(Final_Edge_Eids_Output)
+    #
+    # print('FLOWS: ')
+    # print(Final_Flows_Output)
+    #
+    # print('POSITION: ')
+    # print(cube_position)
+
+    return data_package
+
+
+def flow_versus_depth_comparison(network_ids, segments, path_eval):
+
+    data_sets = []
+
+    for j in network_ids:
+
+        path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Networks\\' \
+                + str(j) + '\\graph.pkl'
+
+        graph = ig.Graph.Read_Pickle(path)
+
+        meshdata_file = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Flow_Problem\\' + str(j) + '_Baseflow\\out\\meshdata_249.csv'
+
+        df_start = pd.read_csv(meshdata_file)
+
+        z_min = min(graph.vs['z_coordinate'])
+        z_max = max(graph.vs['z_coordinate'])
+
+        delta_z = z_max - z_min
+
+        segment_length = delta_z / segments
+
+        regions = []
+        labels_x = []
+        averaged_flow_rates_per_region = []
+
+        for i in range(segments):
+
+            start = z_min + i * segment_length
+            end = start + segment_length
+
+            labels_x.append(np.round((start+end)/2, 2))
+            regions.append([start, end])
+
+        for region in range(len(regions)):
+
+            reg = regions[region]
+            z_lower = reg[0]
+            z_upper = reg[1]
+
+            flows_in_region = []
+            eids_in_region = []
+            corresponding_length = []
+
+            for i in range(graph.ecount()):
+
+                if graph.es[i]['Type'] == 0 or graph.es[i]['Type'] == 3:
+
+                    source_node = graph.es[i].source
+                    target_node = graph.es[i].target
+
+                    z_coord_source_node = graph.vs[source_node]['z_coordinate']
+                    z_coord_target_node = graph.vs[target_node]['z_coordinate']
+
+                    if z_lower < z_coord_source_node < z_upper:
+
+                        flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                        eids_in_region.append(i)
+                        corresponding_length.append(graph.es[i]['edge_length'])
+                        graph.es[i]['RegionID'] = region
+
+                    elif z_lower < z_coord_target_node < z_upper:
+
+                        flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                        eids_in_region.append(i)
+                        corresponding_length.append(graph.es[i]['edge_length'])
+                        graph.es[i]['RegionID'] = region
+
+                    elif z_coord_source_node > z_upper and z_coord_target_node < z_lower:
+
+                        flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                        eids_in_region.append(i)
+                        corresponding_length.append(graph.es[i]['edge_length'])
+                        graph.es[i]['RegionID'] = region
+
+                    elif z_coord_source_node < z_lower and z_coord_target_node > z_upper:
+
+                        flows_in_region.append(np.absolute(df_start['tav_Fplasma'][2 * i]))
+                        eids_in_region.append(i)
+                        corresponding_length.append(graph.es[i]['edge_length'])
+                        graph.es[i]['RegionID'] = region
+
+                else:
+
+                    None
+
+            flows_as_array = np.array(flows_in_region)
+            length_as_array = np.array(corresponding_length)
+            total_length = np.sum(corresponding_length)
+
+            averaged_flow_in_region = np.sum((flows_as_array * length_as_array)) / total_length
+
+            averaged_flow_rates_per_region.append(averaged_flow_in_region)
+
+        data_sets.append([labels_x, averaged_flow_rates_per_region])
+
+    for i in range(len(data_sets)):
+
+        plt.plot(data_sets[i][0], data_sets[i][1], label='Network ID: ' + str(network_ids[i]))
+
+    plt.ylabel('(Length) Averaged Flow Rates')
+    plt.xlabel('Depth [$\mu$m]')
+    plt.gcf().subplots_adjust(bottom=0.2)
+    plt.legend()
+    plt.grid(True)
+    plt.savefig(path_eval + '\\Depth_Vs_Flow_Comparison.png')
+
+    return None
+
+
+def find_points_on_line(p_1, p_2, number_of_points):
+
+    point_1 = np.array(p_1)
+    point_2 = np.array(p_2)
+
+    points_all = []
+
+    vector = point_2 - point_1
+    delta_vector = vector/number_of_points
+
+    for k in range(number_of_points+1):
+
+        point_new = point_1 + delta_vector * k
+        points_all.append(point_new)
+
+    return points_all
+
+
+# INPUT ----------------------------------------------------------------------------------------------------------------
+
+ids = ['All', 'All_Arteries', 'All_Cap', 'R_100', 'R_125', 'R_150', 'R_175', 'R_200', 'R_300']
+# ids = ['All', 'All_Cap', 'R_100', 'R_125', 'R_150', 'R_175', 'R_200', 'R_300']
+# ids = ['All']
+
+path = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Adjoint\6_out_'
+path_graph = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Networks\0\graph.pkl'
+start_file = '\out\meshdata_9999.csv'
+
+files = []
+# r=root, d=directories, f = files
+for r, d, f in os.walk(path):
+    for file in f:
+
+        if file[0:8] == 'meshdata':
+
+            files.append(file)
+
+files.remove('meshdata_9999.csv')
+end_file = '\out\\' + files[0]
+print(end_file)
+
+for idx in ids:
+
+    print(idx)
+
+    files = []
+    # r=root, d=directories, f = files
+    for r, d, f in os.walk(path + '\\' + idx):
+        for file in f:
+
+            if file[0:8] == 'meshdata':
+                files.append(file)
+
+    files.remove('meshdata_9999.csv')
+    end_file = '\out\\' + files[0]
+    print(end_file)
+
+    simulation_path = path + '\\' + idx
+
+    corresponding_network = simulation_path + r'\in\adjointMethod'
+    _path_adjoint_file = simulation_path + r'\out\adjointdata.csv'
+    _start_file = simulation_path + start_file
+    _end_file_ = simulation_path + end_file
+
+    path_x = corresponding_network + r'\activated_eids.csv'
+
+    r = csv.reader(open(path_x))
+    lines = list(r)
+    activated_eids = lines[0]
+    activated_eids = list(map(int, activated_eids))
+
+    # adjoint_data_plot(_path_adjoint_file, simulation_path)
+    #
+    # compute_flow_change(_start_file, _end_file_, activated_eids, simulation_path)
+    plot_3_d_plasma(_start_file, _end_file_, simulation_path)
+    plot_3_d_diameter(_start_file, _end_file_, simulation_path)
+
+    if idx == 'All_Arteries':
+
+        continue
+
+    else:
+        plot_diameter_change(path_graph, _start_file, _end_file_, simulation_path)
+
+
+# 3D Plot Special - Flows  ---------------------------------------------------------------------------------------------
+
+# for i in range(1):
+#
+#     print(i)
+#
+#     path = 'D:\\00 Privat\\01_Bildung\\01_ETH Zürich\MSc\\00_Masterarbeit\\02_Network_Study_Small\\Networks\\' \
+#             + str(i) + '\\graph.pkl'
+#
+#     path1 = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Adjoint\Sim_1\All\out\meshdata_249.csv'
+#
+#     path2 = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Adjoint\Sim_1\All\out\meshdata_39999.csv'
+#
+#     graph_ = ig.Graph.Read_Pickle(path)
+#     cube_info = flow_rate_cube(graph_, 150, path1, path2)
+#
+#     cube_position = cube_info['Position']
+#     cube_Coordinates = cube_info['Coordinates']
+#     cube_flows = cube_info['Flow_Rates']
+#     max_cube_flow = max(cube_flows)
+#
+#     for i in range(len(cube_flows)):
+#
+#         print(cube_flows[i])
+#
+#     z_list = [0, 1, 2, 3]              # max 4
+#
+#     data_to_plot_tot = []
+#     x_coord_list_tot = []
+#     y_coord_list_tot = []
+#     z_coord_list_tot = []
+#
+#     for z in z_list:
+#
+#         data_to_plot = []
+#         data_to_plot_position = []
+#         coordinates = []
+#
+#         for y in range(cube_info['cubes_y']-1, -1, -1):
+#
+#             y_line_cubes = []
+#
+#             for x in range(cube_info['cubes_x']):
+#
+#                 y_line_cubes.append([x, y, z])
+#
+#             data_to_plot_position.append(y_line_cubes)
+#
+#         for j in data_to_plot_position:
+#
+#             current_y_line = j
+#             line_to_plot = []
+#
+#             for cube in current_y_line:
+#                 index = cube_position.index(cube)
+#                 line_to_plot.append(cube_flows[index])
+#                 coordinates.append(cube_Coordinates[index])
+#
+#             data_to_plot.append(line_to_plot)
+#
+#         x_coordinates = []
+#         y_coordinates = []
+#         z_coordinates = []
+#
+#         for coord in coordinates:
+#
+#             x_coordinates.append(coord[0])
+#             y_coordinates.append(coord[1])
+#             z_coordinates.append(coord[2])
+#
+#         x_coord_list = []
+#         y_coord_list = []
+#         z_coord_list = []
+#
+#         for x in x_coordinates:
+#
+#             x_coord_list.append(x[0])
+#             x_coord_list.append(x[1])
+#
+#         for y in y_coordinates:
+#             y_coord_list.append(y[0])
+#             y_coord_list.append(y[1])
+#
+#         for z in z_coordinates:
+#             z_coord_list.append(z[0])
+#             z_coord_list.append(z[1])
+#
+#         x_coord_list = list(dict.fromkeys(x_coord_list))
+#         y_coord_list = list(dict.fromkeys(y_coord_list))
+#         z_coord_list = list(dict.fromkeys(z_coord_list))
+#
+#         x_coord_list_tot.append(x_coord_list)
+#         y_coord_list_tot.append(y_coord_list)
+#         z_coord_list_tot.append(z_coord_list)
+#
+#         data_to_plot_tot.append(data_to_plot)
+#
+#     print(data_to_plot_tot)
+#
+#     plot_3d_cube(data_to_plot_tot, max_cube_flow, x_coord_list_tot, y_coord_list_tot, z_coord_list_tot, graph_)
 
 
 
