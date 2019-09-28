@@ -1,12 +1,18 @@
-import pandas as pd
-import numpy as np
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
 import matplotlib.pyplot as plt
-import csv
-import math
+import numpy as np
+from matplotlib import colors
+from matplotlib.ticker import PercentFormatter
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.patches import Polygon
 import os
+import pandas as pd
+import csv
 import igraph as ig
+from collections import OrderedDict
+import math
 import seaborn as sns
+import random
 
 
 def exclude_edges_with_too_small_flows(network_id):
@@ -45,89 +51,13 @@ def exclude_edges_with_too_small_flows(network_id):
 
     q_sim_zeitpunkt_9999 = 1/length_total_sum * np.sum((l_start_new_array * abs(f_start_new_array)))
 
-    a = np.where(np.abs(f_start_new_array) > q_sim_zeitpunkt_9999 / 30)
+    a = np.where(np.abs(f_start_new_array) > q_sim_zeitpunkt_9999 / 10)
     relevant_edges = list(a[0])
 
     return relevant_edges
 
 
-def define_activated_region(graph, coords_sphere, r_sphere):
-
-    edges_in_current_region = []
-
-    for edge in range(graph.ecount()):
-
-        p1 = graph.es[edge].source
-        x_1 = graph.vs[p1]['x_coordinate'] / math.pow(10, 6)
-        y_1 = graph.vs[p1]['y_coordinate'] / math.pow(10, 6)
-        z_1 = graph.vs[p1]['z_coordinate'] / math.pow(10, 6)
-
-        p2 = graph.es[edge].target
-        x_2 = graph.vs[p2]['x_coordinate'] / math.pow(10, 6)
-        y_2 = graph.vs[p2]['y_coordinate'] / math.pow(10, 6)
-        z_2 = graph.vs[p2]['z_coordinate'] / math.pow(10, 6)
-
-        x_3 = coords_sphere['x'] / math.pow(10, 6)
-        y_3 = coords_sphere['y'] / math.pow(10, 6)
-        z_3 = coords_sphere['z'] / math.pow(10, 6)
-
-        radius = r_sphere / math.pow(10, 6)
-
-        a = math.pow(x_2 - x_1, 2) + math.pow(y_2 - y_1, 2) + math.pow(z_2 - z_1, 2)
-        b = 2 * ((x_2 - x_1)*(x_1 - x_3) + (y_2 - y_1)*(y_1 - y_3) + (z_2 - z_1)*(z_1 - z_3))
-        c = math.pow(x_3, 2) + math.pow(y_3, 2) + math.pow(z_3, 2) + math.pow(x_1, 2) + math.pow(y_1, 2) + math.pow(z_1, 2) - 2 * (x_3 * x_1 + y_3 * y_1 + z_3 * z_1) - math.pow(radius, 2)
-
-        value = math.pow(b, 2) - 4 * a * c
-
-        if value >= 0:
-
-            u_1 = (-b + math.sqrt(value)) / (2 * a)
-            u_2 = (-b - math.sqrt(value)) / (2 * a)
-
-            # Line segment doesnt intersect but is inside sphere
-
-            if u_1 < 0 and u_2 > 1:
-
-                edges_in_current_region.append(edge)
-
-            elif u_2 < 0 and u_1 > 1:
-
-                edges_in_current_region.append(edge)
-
-            # Line segment intersects at one point
-
-            elif (0 <= u_1 <= 1) and (u_2 > 1 or u_2 < 0):
-
-                edges_in_current_region.append(edge)
-
-            elif (0 <= u_2 <= 1) and (u_1 > 1 or u_1 < 0):
-
-                edges_in_current_region.append(edge)
-
-            # Line segment intersects at two points
-
-            elif (0 <= u_2 <= 1) and (0 <= u_1 <= 1):
-
-                edges_in_current_region.append(edge)
-
-            # Line segment is tangential
-
-            elif (u_1 == u_2) and (0 <= u_1 <= 1):
-
-                edges_in_current_region.append(edge)
-
-            else:
-
-                continue
-
-        else:
-
-            continue
-
-    return edges_in_current_region
-
-
-def get_flow_data_for_different_networks_ACTIVATED_REGION(percent):
+def get_flow_data_for_different_networks_NOT_activated_region_capillaries(percent):
 
     path = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Adjoint'
 
@@ -140,9 +70,6 @@ def get_flow_data_for_different_networks_ACTIVATED_REGION(percent):
     # networks = ['0_Out_']
     histogram_data_id = ['R_100', 'R_125', 'R_150', 'R_200', 'All']
     # histogram_data_id = ['All']
-
-    coor = {'x': 200, 'y': 400, 'z': 400}
-    rr = 80
 
     data_network_0 = {}
     data_network_3 = {}
@@ -229,28 +156,26 @@ def get_flow_data_for_different_networks_ACTIVATED_REGION(percent):
             f_end_new_array = np.asarray(f_end_new)
 
             f_ratio = np.abs(f_start_new_array / f_end_new_array)
-
-            edges_in_activated_region = define_activated_region(graph_, coor, rr)
             relevant_edges_flow_higher_1_100 = exclude_edges_with_too_small_flows(network)
 
-            activated_eids_relevant = []
+            for activated_edge in activated_eids:
 
-            for edge in edges_in_activated_region:
+                try:
+                    relevant_edges_flow_higher_1_100.remove(activated_edge)
 
-                if edge in relevant_edges_flow_higher_1_100:
+                except:
 
-                    activated_eids_relevant.append(edge)
+                    print("Too Small Baselineflow in this Edge. Already deleted ")
 
-            # for activated_edge in activated_eids:
-            #
-            #     try:
-            #         relevant_edges_flow_higher_1_100.remove(activated_edge)
-            #
-            #     except:
-            #
-            #         print("Too Small Baselineflow in this Edge. Already deleted ")
+            relevant_edges_capillaries_only = []
 
-            flow_changes_reacting_edges = f_ratio[activated_eids_relevant]
+            for edge in relevant_edges_flow_higher_1_100:
+
+                if graph_.es[edge]['Type'] == 0 or graph_.es[edge]['Type'] == 3:
+
+                    relevant_edges_capillaries_only.append(edge)
+
+            flow_changes_reacting_edges = f_ratio[relevant_edges_capillaries_only]
             flow_changes_reacting_edges_percent = np.abs((flow_changes_reacting_edges - 1) * 100)
 
             # HIER KANN BEGRENZUNG EINGEBAUEN WERDEN
@@ -262,6 +187,13 @@ def get_flow_data_for_different_networks_ACTIVATED_REGION(percent):
             # print(diameter_changes_selection_FINAL)
             data[network][radius] = flow_changes_selection_FINAL
 
+    print(np.mean(data['0_Out_']['R_100']))
+    print(data['0_Out_']['R_100'])
+    print(max(data['0_Out_']['R_100']))
+
+    a = np.where(data['0_Out_']['R_100'] > 100)
+    print(data['0_Out_']['R_100'][a])
+
     # print(len(data_r_100), data_r_100)
     # print(len(data_r_150), data_r_150)
     # print(len(data_r_200), data_r_200)
@@ -271,11 +203,11 @@ def get_flow_data_for_different_networks_ACTIVATED_REGION(percent):
     return data
 
 
-def plot_flow_all_vessel_types_NEW_ACTIVATED_REGION(prozent):
+def plot_flow_all_vessel_types_NEW_capillaries(prozent):
 
     print('Start Plotting')
 
-    data = get_flow_data_for_different_networks_ACTIVATED_REGION(prozent)
+    data = get_flow_data_for_different_networks_NOT_activated_region_capillaries(prozent)
 
     print('recieved data')
     df = pd.DataFrame(columns=['Group', 'Network 1', 'Network 2', 'Network 3', 'Network 4', ''])
@@ -434,7 +366,7 @@ def plot_flow_all_vessel_types_NEW_ACTIVATED_REGION(prozent):
 
     # Put a legend to the right of the current axis
     testPlot.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-    testPlot.set_ylim(-12, 100)
+    testPlot.set_ylim(-7, 40)
 
     ind = 0
     for tick in range(len(testPlot.get_xticklabels())):
@@ -448,7 +380,9 @@ def plot_flow_all_vessel_types_NEW_ACTIVATED_REGION(prozent):
 
     # plt.legend(loc='upper right')
     # plt.savefig(
-         # r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Adjoint\Flow_Change_R100_to_ALL\Activation_Region\flow_diameter_all_types.png')
+    #      r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Adjoint\Flow_Change_R100_to_ALL\Rest\flow_diameter_capillaries.png')
     plt.show()
 
-plot_flow_all_vessel_types_NEW_ACTIVATED_REGION(1)
+
+
+plot_flow_all_vessel_types_NEW_capillaries(1)

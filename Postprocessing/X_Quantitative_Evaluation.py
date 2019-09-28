@@ -8,6 +8,7 @@ from mpl_toolkits.mplot3d.art3d import Line3DCollection
 import csv
 import igraph as ig
 import os
+from matplotlib.ticker import PercentFormatter
 
 
 def adjoint_data_plot(path, target_path_):
@@ -497,7 +498,7 @@ def plot_3_d_plasma(meshdata_start, meshdata_final, target_path_):
     plt.clf()
 
 
-def plot_diameter_change(graph, meshdata_start, meshdata_final, target_path_):
+def plot_diameter_change_per_total_volume(graph, meshdata_start, meshdata_final, target_path_):
 
     df_start = pd.read_csv(meshdata_start)
     df_final = pd.read_csv(meshdata_final)
@@ -507,72 +508,266 @@ def plot_diameter_change(graph, meshdata_start, meshdata_final, target_path_):
     t_1 = np.array(df_start['D'])
     t_2 = np.array(df_final['D'])
 
+    length = np.array(df_final['L'])
+
     t = t_2 / t_1
     t_new = []
+    l_new = []
+    t_2_new = []
 
     for i in range(len(t)):
 
         if (i % 2) == 0:
             t_new.append(t[i])
+            t_2_new.append(t_2[i])
+            l_new.append(length[i])
 
     t_new_array = np.asarray(t_new)
+    t_2_new_array = np.asarray(t_2_new)
+    l_new_array = np.asarray(l_new)
 
     diameter_change = np.asarray(np.absolute((t_new_array-1)*100))
     print(diameter_change[0:10])
 
     diameter_change_capillaries = []
+    volume_capillaries = []
     diameter_change_arteries = []
+    volume_arteries = []
     diameter_change_veins = []
-
+    volume_veins = []
 
     for edge in range(graph_.ecount()):
 
         if graph_.es[edge]['Type'] == 0 or graph_.es[edge]['Type'] == 3:
 
             diameter_change_capillaries.append(diameter_change[edge])
+            volume_capillaries.append(l_new_array[edge]*math.pi * 0.25 * math.pow(t_2_new_array[edge], 2))
 
         elif graph_.es[edge]['Type'] == 1:
 
             diameter_change_veins.append(diameter_change[edge])
+            volume_veins.append(l_new_array[edge] * math.pi * 0.25 * math.pow(t_2_new_array[edge], 2))
 
         elif graph_.es[edge]['Type'] == 2:
 
             diameter_change_arteries.append((diameter_change[edge]))
+            volume_arteries.append(l_new_array[edge] * math.pi * 0.25 * math.pow(t_2_new_array[edge], 2))
 
     diameter_change_capillaries = np.asarray(diameter_change_capillaries)
     diameter_change_arteries = np.asarray(diameter_change_arteries)
     diameter_change_veins = np.asarray(diameter_change_veins)
+    volume_capillaries = np.asarray(volume_capillaries)
+    volume_veins = np.asarray(volume_veins)
+    volume_arteries = np.asarray(volume_arteries)
 
     # index = np.where(np.asarray(diameter_change) > 0.1)
     # index_list = list(index[0])
     # # print(index_list)
     # diameter_change_new = diameter_change[index_list]
 
-    index_cap = np.where(np.asarray(diameter_change_capillaries) > 0.5)
+    prozent_grenze = 0.25
+    index_cap = np.where(np.asarray(diameter_change_capillaries) > prozent_grenze)
     index_list_cap = list(index_cap[0])
     diameter_change_cap_new = diameter_change_capillaries[index_list_cap]
+    volume_cap_new = volume_capillaries[index_list_cap]
 
-    index_art = np.where(np.asarray(diameter_change_arteries) > 0.5)
+    index_art = np.where(np.asarray(diameter_change_arteries) > prozent_grenze)
     index_list_art = list(index_art[0])
     diameter_change_art_new = diameter_change_arteries[index_list_art]
+    volume_art_new = volume_arteries[index_list_art]
 
-    index_ve = np.where(np.asarray(diameter_change_veins) > 0.5)
+    index_ve = np.where(np.asarray(diameter_change_veins) > prozent_grenze)
     index_list_ve = list(index_ve[0])
     diameter_change_ve_new = diameter_change_veins[index_list_ve]
+    volume_ve_new = volume_veins[index_list_ve]
 
-    # print(diameter_change)
-    names = ['Capillaries', 'Veins', 'Arteries']
-    colors = ['#E69F00', '#56B4E9', '#D55E00']
-    n, bins, patches = plt.hist([diameter_change_cap_new, diameter_change_ve_new, diameter_change_art_new]
-                                , bins='auto', density=False, color=colors, stacked=True, alpha=0.75, label=names)
+    # NEW
 
-    plt.xlabel('Diameter Change in %')
-    plt.ylabel('Number of Vessels')
-    plt.xlim(0, 15)
-    plt.grid(True)
+    # Generate a normal distribution, center at x=0 and y=5
+
+    fig, axs = plt.subplots(1, 3, sharey=True, tight_layout=True, figsize=(10, 5))
+    bins = 20
+
+    volume_total = np.sum(volume_capillaries) + np.sum(volume_arteries) + np.sum(volume_veins)
+    # We can set the number of bins with the `bins` kwarg
+    # axs[0].hist(diameter_change_cap_new, bins=bins, weights=np.ones(len(diameter_change_cap_new)) / len(diameter_change_capillaries), density=False, color='grey', alpha=0.5, label='Capillaries', ec="k")
+    axs[0].hist(diameter_change_cap_new, bins=bins, weights=volume_cap_new / volume_total, density=False, color='grey', alpha=0.5, label='Capillaries', ec="k")
+    # axs[0].set_title('Capillaries')
+    axs[0].legend()
+    axs[0].grid()
+    axs[0].set(ylabel='Volume Percentage of affected Vessels')
+
+    axs[1].hist(diameter_change_art_new, bins=bins, weights=volume_art_new / volume_total, density=False, color='red', alpha=0.5, label='Arterioles', ec="k")
+    # axs[1].set_title('Arterioles')
+    axs[1].legend()
+    axs[1].grid()
+
+    axs[2].hist(diameter_change_ve_new, bins=bins, weights=volume_ve_new / volume_total, density=False, color='blue', alpha=0.5, label='Venules', ec="k")
+    # axs[2].set_title('Venules')
+    axs[2].set_ylim()
     plt.legend()
-    plt.savefig(target_path_ + '\\' + 'diameter_change_histogram.png')
+    plt.grid()
+
+    plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
+    plt.legend()
+    plt.xlabel(' ')
+    fig.text(0.5, 0.02, 'Change of Diameter in %', ha='center')
+    plt.savefig(target_path_ + '\\' + 'diameter_change_histogram_per_tot_volume.png')
     plt.clf()
+
+    return
+
+    # OLD
+
+    # # print(diameter_change)
+    # names = ['Capillaries', 'Veins', 'Arteries']
+    # colors = ['#E69F00', '#56B4E9', '#D55E00']
+    # n, bins, patches = plt.hist([diameter_change_cap_new, diameter_change_ve_new, diameter_change_art_new]
+    #                             , bins='auto', density=False, color=colors, stacked=True, alpha=0.75, label=names)
+    #
+    # plt.xlabel('Diameter Change in %')
+    # plt.ylabel('Number of Vessels')
+    # plt.xlim(0, 15)
+    # plt.grid(True)
+    # plt.legend()
+    # plt.savefig(target_path_ + '\\' + 'diameter_change_histogram.png')
+    # plt.clf()
+
+
+def plot_diameter_change_per_volume_of_vessel_type(graph, meshdata_start, meshdata_final, target_path_):
+
+    df_start = pd.read_csv(meshdata_start)
+    df_final = pd.read_csv(meshdata_final)
+
+    graph_ = ig.Graph.Read_Pickle(graph)
+
+    t_1 = np.array(df_start['D'])
+    t_2 = np.array(df_final['D'])
+
+    length = np.array(df_final['L'])
+
+    t = t_2 / t_1
+    t_new = []
+    l_new = []
+    t_2_new = []
+
+    for i in range(len(t)):
+
+        if (i % 2) == 0:
+            t_new.append(t[i])
+            t_2_new.append(t_2[i])
+            l_new.append(length[i])
+
+    t_new_array = np.asarray(t_new)
+    t_2_new_array = np.asarray(t_2_new)
+    l_new_array = np.asarray(l_new)
+
+    diameter_change = np.asarray(np.absolute((t_new_array-1)*100))
+    print(diameter_change[0:10])
+
+    diameter_change_capillaries = []
+    volume_capillaries = []
+    diameter_change_arteries = []
+    volume_arteries = []
+    diameter_change_veins = []
+    volume_veins = []
+
+    for edge in range(graph_.ecount()):
+
+        if graph_.es[edge]['Type'] == 0 or graph_.es[edge]['Type'] == 3:
+
+            diameter_change_capillaries.append(diameter_change[edge])
+            volume_capillaries.append(l_new_array[edge]*math.pi * 0.25 * math.pow(t_2_new_array[edge], 2))
+
+        elif graph_.es[edge]['Type'] == 1:
+
+            diameter_change_veins.append(diameter_change[edge])
+            volume_veins.append(l_new_array[edge] * math.pi * 0.25 * math.pow(t_2_new_array[edge], 2))
+
+        elif graph_.es[edge]['Type'] == 2:
+
+            diameter_change_arteries.append((diameter_change[edge]))
+            volume_arteries.append(l_new_array[edge] * math.pi * 0.25 * math.pow(t_2_new_array[edge], 2))
+
+    diameter_change_capillaries = np.asarray(diameter_change_capillaries)
+    diameter_change_arteries = np.asarray(diameter_change_arteries)
+    diameter_change_veins = np.asarray(diameter_change_veins)
+    volume_capillaries = np.asarray(volume_capillaries)
+    volume_veins = np.asarray(volume_veins)
+    volume_arteries = np.asarray(volume_arteries)
+
+    # index = np.where(np.asarray(diameter_change) > 0.1)
+    # index_list = list(index[0])
+    # # print(index_list)
+    # diameter_change_new = diameter_change[index_list]
+
+    prozent_grenze = 0.25
+    index_cap = np.where(np.asarray(diameter_change_capillaries) > prozent_grenze)
+    index_list_cap = list(index_cap[0])
+    diameter_change_cap_new = diameter_change_capillaries[index_list_cap]
+    volume_cap_new = volume_capillaries[index_list_cap]
+
+    index_art = np.where(np.asarray(diameter_change_arteries) > prozent_grenze)
+    index_list_art = list(index_art[0])
+    diameter_change_art_new = diameter_change_arteries[index_list_art]
+    volume_art_new = volume_arteries[index_list_art]
+
+    index_ve = np.where(np.asarray(diameter_change_veins) > prozent_grenze)
+    index_list_ve = list(index_ve[0])
+    diameter_change_ve_new = diameter_change_veins[index_list_ve]
+    volume_ve_new = volume_veins[index_list_ve]
+
+    # NEW
+
+    # Generate a normal distribution, center at x=0 and y=5
+
+    fig, axs = plt.subplots(1, 3, sharey=True, tight_layout=True, figsize=(10, 5))
+    bins = 20
+
+    volume_total = np.sum(volume_capillaries) + np.sum(volume_arteries) + np.sum(volume_veins)
+    # We can set the number of bins with the `bins` kwarg
+    # axs[0].hist(diameter_change_cap_new, bins=bins, weights=np.ones(len(diameter_change_cap_new)) / len(diameter_change_capillaries), density=False, color='grey', alpha=0.5, label='Capillaries', ec="k")
+    axs[0].hist(diameter_change_cap_new, bins=bins, weights=volume_cap_new / np.sum(volume_capillaries), density=False, color='grey', alpha=0.5, label='Capillaries', ec="k")
+    # axs[0].set_title('Capillaries')
+    axs[0].legend()
+    axs[0].grid()
+    axs[0].set(ylabel='Volume Percentage of affected Vessels')
+
+    axs[1].hist(diameter_change_art_new, bins=bins, weights=volume_art_new / np.sum(volume_arteries), density=False, color='red', alpha=0.5, label='Arterioles', ec="k")
+    # axs[1].set_title('Arterioles')
+    axs[1].legend()
+    axs[1].grid()
+
+    axs[2].hist(diameter_change_ve_new, bins=bins, weights=volume_ve_new / np.sum(volume_veins), density=False, color='blue', alpha=0.5, label='Venules', ec="k")
+    # axs[2].set_title('Venules')
+    axs[2].set_ylim()
+    plt.legend()
+    plt.grid()
+
+    plt.gca().yaxis.set_major_formatter(PercentFormatter(1))
+    plt.legend()
+    plt.xlabel(' ')
+    fig.text(0.5, 0.02, 'Change of Diameter in %', ha='center')
+    plt.savefig(target_path_ + '\\' + 'diameter_change_histogram_per_volume_of_given_types.png')
+    plt.clf()
+
+    return
+
+    # OLD
+
+    # # print(diameter_change)
+    # names = ['Capillaries', 'Veins', 'Arteries']
+    # colors = ['#E69F00', '#56B4E9', '#D55E00']
+    # n, bins, patches = plt.hist([diameter_change_cap_new, diameter_change_ve_new, diameter_change_art_new]
+    #                             , bins='auto', density=False, color=colors, stacked=True, alpha=0.75, label=names)
+    #
+    # plt.xlabel('Diameter Change in %')
+    # plt.ylabel('Number of Vessels')
+    # plt.xlim(0, 15)
+    # plt.grid(True)
+    # plt.legend()
+    # plt.savefig(target_path_ + '\\' + 'diameter_change_histogram.png')
+    # plt.clf()
 
 
 def plot_3d_cube(flows, cube_flow_max, xticks, yticks, z_coord, graph):
@@ -1146,13 +1341,246 @@ def find_points_on_line(p_1, p_2, number_of_points):
     return points_all
 
 
+def define_activated_region(graph, coords_sphere, r_sphere):
+
+    edges_in_current_region = []
+
+    for edge in range(graph.ecount()):
+
+        p1 = graph.es[edge].source
+        x_1 = graph.vs[p1]['x_coordinate'] / math.pow(10, 6)
+        y_1 = graph.vs[p1]['y_coordinate'] / math.pow(10, 6)
+        z_1 = graph.vs[p1]['z_coordinate'] / math.pow(10, 6)
+
+        p2 = graph.es[edge].target
+        x_2 = graph.vs[p2]['x_coordinate'] / math.pow(10, 6)
+        y_2 = graph.vs[p2]['y_coordinate'] / math.pow(10, 6)
+        z_2 = graph.vs[p2]['z_coordinate'] / math.pow(10, 6)
+
+        x_3 = coords_sphere['x'] / math.pow(10, 6)
+        y_3 = coords_sphere['y'] / math.pow(10, 6)
+        z_3 = coords_sphere['z'] / math.pow(10, 6)
+
+        radius = r_sphere / math.pow(10, 6)
+
+        a = math.pow(x_2 - x_1, 2) + math.pow(y_2 - y_1, 2) + math.pow(z_2 - z_1, 2)
+        b = 2 * ((x_2 - x_1)*(x_1 - x_3) + (y_2 - y_1)*(y_1 - y_3) + (z_2 - z_1)*(z_1 - z_3))
+        c = math.pow(x_3, 2) + math.pow(y_3, 2) + math.pow(z_3, 2) + math.pow(x_1, 2) + math.pow(y_1, 2) + math.pow(z_1, 2) - 2 * (x_3 * x_1 + y_3 * y_1 + z_3 * z_1) - math.pow(radius, 2)
+
+        value = math.pow(b, 2) - 4 * a * c
+
+        if value >= 0:
+
+            u_1 = (-b + math.sqrt(value)) / (2 * a)
+            u_2 = (-b - math.sqrt(value)) / (2 * a)
+
+            # Line segment doesnt intersect but is inside sphere
+
+            if u_1 < 0 and u_2 > 1:
+
+                edges_in_current_region.append(edge)
+
+            elif u_2 < 0 and u_1 > 1:
+
+                edges_in_current_region.append(edge)
+
+            # Line segment intersects at one point
+
+            elif (0 <= u_1 <= 1) and (u_2 > 1 or u_2 < 0):
+
+                edges_in_current_region.append(edge)
+
+            elif (0 <= u_2 <= 1) and (u_1 > 1 or u_1 < 0):
+
+                edges_in_current_region.append(edge)
+
+            # Line segment intersects at two points
+
+            elif (0 <= u_2 <= 1) and (0 <= u_1 <= 1):
+
+                edges_in_current_region.append(edge)
+
+            # Line segment is tangential
+
+            elif (u_1 == u_2) and (0 <= u_1 <= 1):
+
+                edges_in_current_region.append(edge)
+
+            else:
+
+                continue
+
+        else:
+
+            continue
+
+    return edges_in_current_region
+
+
+def plot_distance():
+
+    path = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Adjoint'
+
+    path_0_graph = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Networks\0\graph.pkl'
+    path_3_graph = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Networks\3\graph.pkl'
+    path_4_graph = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Networks\4\graph.pkl'
+    path_6_graph = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Networks\6\graph.pkl'
+
+    coord = {'x': 200, 'y': 400, 'z': 400}
+
+    radius_min = 50.0
+    radius_max = 400.0
+    r_steps = 50
+    delta_radius = radius_max - radius_min
+    step_radius = delta_radius / r_steps
+
+    radii = np.arange(radius_min, radius_max, step_radius)
+
+    # print(radii)
+    # print(len(radii))
+    # for radius in radii:
+    #     print(radius)
+    #     current_selection = define_activated_region(graph_, coord, radius)
+    #     print(len(current_selection))
+    #     print(current_selection)
+
+    networks = ['0_Out_', '3_Out_', '4_Out_', '6_Out_']
+    # networks = ['0_Out_']
+    histogram_data_id = ['R_100', 'R_125', 'R_150', 'R_175', 'R_200', 'R_300', 'All', 'All_Arteries', 'All_Cap']
+
+    for network in networks:
+
+        graph_ = ig.Graph()
+
+        if network == '0_Out_':
+
+            graph_ = ig.Graph.Read_Pickle(path_0_graph)
+
+        elif network == '3_Out_':
+
+            graph_ = ig.Graph.Read_Pickle(path_3_graph)
+
+        elif network == '4_Out_':
+
+            graph_ = ig.Graph.Read_Pickle(path_4_graph)
+
+        elif network == '6_Out_':
+
+            graph_ = ig.Graph.Read_Pickle(path_6_graph)
+
+        print(network)
+
+        for r in histogram_data_id:
+
+            print(r)
+
+            case_id = r
+            # current_input_path = path + '\\' + network + '\\' + r + '\\' + 'in\\adjointMethod' + '\\'
+            current_output_path = path + '\\' + network + '\\' + r + '\\' + 'out' + '\\'
+            meshdata_start = current_output_path + 'meshdata_9999.csv'
+
+            files = []
+
+            # r=root, d=directories, f = files
+
+            for r, d, f in os.walk(current_output_path):
+                for file in f:
+
+                    if file[0:8] == 'meshdata':
+                        files.append(file)
+
+            files.remove('meshdata_9999.csv')
+            meshdata_final = current_output_path + files[0]
+
+            df_start = pd.read_csv(meshdata_start)
+            df_final = pd.read_csv(meshdata_final)
+
+            t_1 = np.array(df_start['D'])
+            t_2 = np.array(df_final['D'])
+
+            t = t_2 / t_1
+            t_new = []
+
+            for i in range(len(t)):
+
+                if (i % 2) == 0:
+                    t_new.append(t[i])
+
+            t_new_array = np.asarray(t_new)
+
+            diameter_change_capillaries = []
+            diameter_change_veins = []
+            diameter_change_arterioles = []
+            diameter_change_all = []
+
+            for radius in radii:
+
+                # print(radius)
+                current_selection = define_activated_region(graph_, coord, radius)
+
+                current_selection_arterioles = []
+                current_selection_venules = []
+                current_selection_capillaries = []
+
+                for edge in current_selection:
+
+                    if graph_.es[edge]['Type'] == 0 or graph_.es[edge]['Type'] == 3:
+
+                        current_selection_capillaries.append(edge)
+
+                    elif graph_.es[edge]['Type'] == 1:
+
+                        current_selection_venules.append(edge)
+
+                    elif graph_.es[edge]['Type'] == 2:
+
+                        current_selection_arterioles.append(edge)
+
+                diameter_change_for_selection = t_new_array[current_selection]
+                diameter_change_for_selection_cap = t_new_array[current_selection_capillaries]
+                diameter_change_for_selection_art = t_new_array[current_selection_arterioles]
+                diameter_change_for_selection_ven = t_new_array[current_selection_venules]
+
+                diameter_change_for_selection_percent = np.abs(diameter_change_for_selection - 1)*100
+                diameter_change_for_selection_percent_cap = np.abs(diameter_change_for_selection_cap - 1) * 100
+                diameter_change_for_selection_percent_art = np.abs(diameter_change_for_selection_art - 1) * 100
+                diameter_change_for_selection_percent_ven = np.abs(diameter_change_for_selection_ven - 1) * 100
+
+                diameter_change_all.append(np.mean(diameter_change_for_selection_percent))
+                diameter_change_capillaries.append(np.mean(diameter_change_for_selection_percent_cap))
+                diameter_change_veins.append(np.mean(diameter_change_for_selection_percent_ven))
+                diameter_change_arterioles.append(np.mean(diameter_change_for_selection_percent_art))
+
+            plt.plot(radii, diameter_change_all, label='All Vessel Types')
+            plt.plot(radii, diameter_change_capillaries, label='Capillaries')
+            plt.plot(radii, diameter_change_arterioles, label='Arterioles')
+            plt.plot(radii, diameter_change_veins, label='Venules')
+
+            plt.ylabel('Relative Diameter Change in %')
+            plt.xlabel('Distance from Activation Center')
+            plt.gcf().subplots_adjust(bottom=0.2)
+            plt.legend()
+
+            plt.gca().yaxis.grid(True)
+            # print(r + '\\' + 'D_Change_vs_Radius.png')
+            plt.savefig(path + '\\' + network + '\\' + case_id + '\\' + 'D_Change_vs_Radius.png')
+            plt.clf()
+
+            # print(diameter_change_all)
+            # print(diameter_change_arterioles)
+            # print(diameter_change_veins)
+            # print(diameter_change_capillaries)
+
+    return None
+
+
 # INPUT ----------------------------------------------------------------------------------------------------------------
 
 ids = ['All', 'All_Arteries', 'All_Cap', 'R_100', 'R_125', 'R_150', 'R_175', 'R_200', 'R_300']
 # ids = ['All', 'All_Cap', 'R_100', 'R_125', 'R_150', 'R_175', 'R_200', 'R_300']
 # ids = ['All']
 
-path = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Adjoint\6_out_'
+path = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Adjoint\0_out_'
 path_graph = r'D:\00 Privat\01_Bildung\01_ETH Zürich\MSc\00_Masterarbeit\02_Network_Study_Small\Networks\0\graph.pkl'
 start_file = '\out\meshdata_9999.csv'
 
@@ -1202,16 +1630,24 @@ for idx in ids:
     # adjoint_data_plot(_path_adjoint_file, simulation_path)
     #
     # compute_flow_change(_start_file, _end_file_, activated_eids, simulation_path)
-    plot_3_d_plasma(_start_file, _end_file_, simulation_path)
-    plot_3_d_diameter(_start_file, _end_file_, simulation_path)
+    # plot_3_d_plasma(_start_file, _end_file_, simulation_path)
+    # plot_3_d_diameter(_start_file, _end_file_, simulation_path)
 
-    if idx == 'All_Arteries':
+    # HISTOGRAM
 
-        continue
+    if idx == '':
+
+         continue
 
     else:
-        plot_diameter_change(path_graph, _start_file, _end_file_, simulation_path)
 
+        plot_diameter_change_per_total_volume(path_graph, _start_file, _end_file_, simulation_path)
+        plot_diameter_change_per_volume_of_vessel_type(path_graph, _start_file, _end_file_, simulation_path)
+
+
+# Diameter Change versus Distance from Activation Center
+
+# plot_distance()
 
 # 3D Plot Special - Flows  ---------------------------------------------------------------------------------------------
 
